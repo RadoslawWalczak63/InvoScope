@@ -1,5 +1,7 @@
+import { PrimeVueResolver } from '@primevue/auto-import-resolver';
 import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
+import Components from 'unplugin-vue-components/vite';
 import { defineConfig, loadEnv } from 'vite';
 
 export default ({ mode }) => {
@@ -30,6 +32,9 @@ export default ({ mode }) => {
                         includeAbsolute: false,
                     },
                 },
+            }),
+            Components({
+                resolvers: [PrimeVueResolver()],
             }),
         ],
     });
