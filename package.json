@@ -5,7 +5,10 @@
     "scripts": {
         "build": "vue-tsc && vite build",
         "dev": "vite",
-        "lint": "eslint resources/js --ext .js,.ts,.vue --ignore-path .gitignore --fix"
+        "lint": "eslint resources/js --ext .js,.ts,.vue --ignore-path .gitignore --fix",
+        "prettier": "npx prettier **/* --write --ignore-path ./.prettierignore --ignore-unknown --list-different",
+        "prettier-check": "npx prettier **/* --check --ignore-path ./.prettierignore --ignore-unknown",
+        "phpstan": "./vendor/phpstan/phpstan/phpstan --memory-limit=2G"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
