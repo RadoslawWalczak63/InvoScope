@@ -1,22 +1,31 @@
 <script setup lang="ts">
 import { useDataTable } from '@/Composables/useDataTable';
-import { Entity, PaginatedResource } from '@/Constants/Interfaces';
+import { Invoice, PaginatedResource } from '@/Constants/Interfaces';
+import { InvoiceStatus, InvoiceType } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { Button, Card, Column, DataTable, InputText } from 'primevue';
+import {
+    Button,
+    Card,
+    Column,
+    DataTable,
+    FloatLabel,
+    InputText,
+    Select,
+} from 'primevue';
 
-interface EntityFilters {
+interface InvoiceFilters {
     type?: string;
-    name?: string;
-    country?: string;
-    email?: string;
+    number?: string;
+    buyer?: string;
+    issue_date?: string;
 }
 
 const props = defineProps<{
-    entities: PaginatedResource<Entity>;
-    entityTypes: string[];
+    invoices: PaginatedResource<Invoice>;
+    invoiceTypes: string[];
     state: {
-        filters: EntityFilters;
+        filters: InvoiceFilters;
         sort: string;
     };
 }>();
@@ -31,25 +40,47 @@ const {
     onPage,
     onSort,
     clearFilters,
-} = useDataTable<EntityFilters>({
-    routeName: 'entities.index',
+} = useDataTable<InvoiceFilters>({
+    routeName: 'invoices.index',
     initialFilters: {
         type: props.state.filters.type || '',
-        country: props.state.filters.country || '',
-        email: props.state.filters.email || '',
-        name: props.state.filters.name || '',
+        number: props.state.filters.number || '',
+        buyer: props.state.filters.buyer || '',
+        issue_date: props.state.filters.issue_date || '',
     },
     initialSort: props.state.sort,
-    initialPerPage: props.entities.meta.per_page,
-    initialPage: props.entities.meta.current_page,
+    initialPerPage: props.invoices.meta.per_page,
+    initialPage: props.invoices.meta.current_page,
 });
+
+const getStatusSeverity = (status: string) => {
+    switch (status) {
+        case InvoiceStatus.DRAFT:
+            return 'secondary';
+        case InvoiceStatus.SENT:
+            return 'warning';
+        case InvoiceStatus.PAID:
+            return 'success';
+        case InvoiceStatus.OVERDUE:
+            return 'danger';
+    }
+};
+
+const getTypeSeverity = (type: string) => {
+    switch (type) {
+        case InvoiceType.EXPENSE:
+            return 'warn';
+        case InvoiceType.INCOME:
+            return 'success';
+    }
+};
 </script>
 
 <template>
-    <Head title="Entities" />
+    <Head title="Invoices" />
 
     <AuthenticatedLayout>
-        <template #header>Entities</template>
+        <template #header>Invoices</template>
 
         <Card class="mb-6">
             <template #title>
@@ -71,7 +102,7 @@ const {
                         <Select
                             v-model="filters.type"
                             inputId="type"
-                            :options="entityTypes"
+                            :options="invoiceTypes"
                             class="w-full"
                             variant="filled"
                             showClear
@@ -81,29 +112,30 @@ const {
 
                     <FloatLabel variant="on">
                         <InputText
-                            id="name"
-                            v-model="filters.name"
+                            id="number"
+                            v-model="filters.number"
                             class="w-full"
                         />
-                        <label for="name">Name</label>
+                        <label for="number">Invoice Number</label>
                     </FloatLabel>
 
                     <FloatLabel variant="on">
                         <InputText
-                            id="country"
-                            v-model="filters.country"
+                            id="buyer"
+                            v-model="filters.buyer"
                             class="w-full"
                         />
-                        <label for="country">Country</label>
+                        <label for="buyer">Buyer Name</label>
                     </FloatLabel>
 
                     <FloatLabel variant="on">
                         <InputText
-                            id="email"
-                            v-model="filters.email"
+                            id="issue_date"
+                            type="date"
+                            v-model="filters.issue_date"
                             class="w-full"
                         />
-                        <label for="email">Email</label>
+                        <label for="issue_date">Issue Date</label>
                     </FloatLabel>
                 </div>
             </template>
@@ -112,13 +144,13 @@ const {
         <Card>
             <template #content>
                 <DataTable
-                    :value="entities.data"
+                    :value="invoices.data"
                     lazy
                     paginator
                     stripedRows
                     :loading="loading"
                     :first="first"
-                    :totalRecords="entities.meta.total"
+                    :totalRecords="invoices.meta.total"
                     :rows="rows"
                     :rowsPerPageOptions="[5, 10, 20, 50]"
                     removableSort
@@ -128,12 +160,46 @@ const {
                     :sortOrder="sortOrder"
                     tableStyle="min-width: 50rem"
                 >
-                    <Column field="type" header="Type" sortable />
-                    <Column field="name" header="Name" />
-                    <Column field="country" header="Country" sortable />
-                    <Column field="email" header="Email" sortable />
-                    <Column field="phone" header="Phone" />
+                    <Column field="number" header="Number" sortable />
+
+                    <Column field="type" header="Type" sortable>
+                        <template #body="slotProps">
+                            <Tag
+                                :value="slotProps.data.type"
+                                :severity="getTypeSeverity(slotProps.data.type)"
+                                size="small"
+                            />
+                        </template>
+                    </Column>
+
+                    <Column field="type" header="Status" sortable>
+                        <template #body="slotProps">
+                            <Tag
+                                :value="slotProps.data.status"
+                                :severity="
+                                    getStatusSeverity(slotProps.data.status)
+                                "
+                                size="small"
+                            />
+                        </template>
+                    </Column>
+
+                    <Column header="Buyer">
+                        <template #body="slotProps">
+                            {{ slotProps.data.buyer?.name || 'N/A' }}
+                        </template>
+                    </Column>
+
+                    <Column header="Seller">
+                        <template #body="slotProps">
+                            {{ slotProps.data.seller?.name || 'N/A' }}
+                        </template>
+                    </Column>
+
+                    <Column field="issue_date" header="Issue Date" sortable />
+
                     <Column field="created_at" header="Created At" sortable />
+
                     <Column>
                         <template #body="slotProps">
                             <Button
@@ -141,7 +207,7 @@ const {
                                     () => {
                                         router.visit(
                                             route(
-                                                'entities.show',
+                                                'invoices.show',
                                                 slotProps.data.id,
                                             ),
                                         );

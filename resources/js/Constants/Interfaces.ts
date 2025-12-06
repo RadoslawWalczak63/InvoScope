@@ -11,6 +11,7 @@ export interface Entity {
     user_id: number;
     user?: User;
     type: string;
+    name?: string;
     company_name?: string;
     first_name?: string;
     last_name?: string;
@@ -42,7 +43,36 @@ export interface PaginationMeta {
     }[];
 }
 
-export interface PaginatedResponse<T> {
+export interface InvoiceItem {
+    id?: number;
+    name: string;
+    description?: string;
+    quantity: number;
+    price: number;
+    tax_amount: number;
+    discount: number;
+    unit: string;
+}
+
+export interface Invoice {
+    id: number;
+    number: string;
+    type: string;
+    status: string;
+    issue_date: string;
+    due_date?: string;
+    buyer: Entity;
+    seller: Entity;
+    items: InvoiceItem[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface PaginatedResource<T> {
     data: T[];
     meta: PaginationMeta;
+}
+
+export interface Resource<T> {
+    data: T;
 }

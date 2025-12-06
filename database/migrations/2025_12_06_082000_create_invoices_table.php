@@ -22,8 +22,8 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->string('number')->unique();
             $table->enum('type', [
-                InvoiceType::Expense->value,
-                InvoiceType::Income->value,
+                InvoiceType::EXPENSE->value,
+                InvoiceType::INCOME->value,
             ]);
             $table->foreignIdFor(Entity::class, 'buyer_id')->constrained();
             $table->foreignIdFor(Entity::class, 'seller_id')->constrained();

@@ -2,13 +2,23 @@
 
 namespace App\Models;
 
+use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon $issue_date
+ * @property InvoiceType $type
+ * @property InvoiceStatus $status
+ */
 class Invoice extends Model
 {
+    use HasFactory;
+
     protected $guarded = [];
 
     protected function casts(): array
@@ -16,6 +26,7 @@ class Invoice extends Model
         return [
             'issue_date' => 'date',
             'type' => InvoiceType::class,
+            'status' => InvoiceStatus::class,
         ];
     }
 

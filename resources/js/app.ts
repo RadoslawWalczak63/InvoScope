@@ -6,6 +6,7 @@ import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import 'primeicons/primeicons.css';
+import { ConfirmationService } from 'primevue';
 import PrimeVue from 'primevue/config';
 import { createApp, DefineComponent, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
@@ -50,6 +51,7 @@ createInertiaApp({
                     },
                 },
             })
+            .use(ConfirmationService)
             .mount(el);
     },
     progress: {

@@ -10,16 +10,24 @@ const showingMobileMenu = ref(false);
 const page = usePage();
 const user = page.props.auth.user;
 
-const navItems: MenuItem[] = [
+const navItems = [
     {
         label: 'Dashboard',
         icon: 'pi pi-home',
+        route: 'dashboard',
         url: route('dashboard'),
     },
     {
         label: 'Entities',
-        icon: 'pi pi-sitemap',
+        icon: 'pi pi-users',
+        route: 'entities.index',
         url: route('entities.index'),
+    },
+    {
+        label: 'Invoices',
+        icon: 'pi pi-receipt',
+        route: 'invoices.index',
+        url: route('invoices.index'),
     },
 ];
 
@@ -60,11 +68,14 @@ const toggleUserMenu = (event: Event) => {
                     <template #item="{ item, props }">
                         <Link
                             :href="item.url ?? '#'"
-                            class="flex items-center"
+                            class="flex items-center gap-2 border-l-2 border-transparent transition-colors duration-300 ease-in-out"
+                            :class="{
+                                'border-blue-500': route().current(item.route),
+                            }"
                             v-bind="props.action"
                         >
                             <span :class="item.icon" />
-                            <span>{{ item.label }}</span>
+                            <span class="font-medium">{{ item.label }}</span>
                             <Badge
                                 v-if="item.badge"
                                 class="ml-auto"
@@ -123,11 +134,14 @@ const toggleUserMenu = (event: Event) => {
                     <template #item="{ item, props }">
                         <Link
                             :href="item.url ?? '#'"
-                            class="flex items-center"
+                            class="flex items-center gap-2 border-l-2 border-transparent transition-colors duration-300 ease-in-out"
+                            :class="{
+                                'border-blue-500': route().current(item.route),
+                            }"
                             v-bind="props.action"
                         >
                             <span :class="item.icon" />
-                            <span>{{ item.label }}</span>
+                            <span class="font-medium">{{ item.label }}</span>
                             <Badge
                                 v-if="item.badge"
                                 class="ml-auto"
@@ -186,7 +200,7 @@ const toggleUserMenu = (event: Event) => {
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-4">
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-4">
                 <slot />
             </main>
         </div>

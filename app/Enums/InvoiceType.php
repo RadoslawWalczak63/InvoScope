@@ -4,6 +4,6 @@ namespace App\Enums;
 
 enum InvoiceType: string
 {
-    case Income = 'Income';
-    case Expense = 'Expense';
+    case INCOME = 'Income';
+    case EXPENSE = 'Expense';
 }
