@@ -16,6 +16,11 @@ const navItems: MenuItem[] = [
         icon: 'pi pi-home',
         url: route('dashboard'),
     },
+    {
+        label: 'Entities',
+        icon: 'pi pi-sitemap',
+        url: route('entities.index'),
+    },
 ];
 
 const userNavItems: MenuItem[] = [

@@ -10,6 +10,11 @@ declare module 'vue' {
   export interface GlobalComponents {
     Badge: typeof import('primevue/badge')['default']
     Button: typeof import('primevue/button')['default']
+    Card: typeof import('primevue/card')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
+    Column: typeof import('primevue/column')['default']
+    DataTable: typeof import('primevue/datatable')['default']
+    FloatLabel: typeof import('primevue/floatlabel')['default']
+    Select: typeof import('primevue/select')['default']
   }
 }

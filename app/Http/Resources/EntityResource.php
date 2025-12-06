@@ -15,6 +15,8 @@ class EntityResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'user_id' => $this->user_id,
+            'user' => new UserResource($this->whenLoaded('user')),
             'type' => $this->type,
             'company_name' => $this->company_name,
             'first_name' => $this->first_name,

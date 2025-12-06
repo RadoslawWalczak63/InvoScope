@@ -11,10 +11,13 @@ class Invoice extends Model
 {
     protected $guarded = [];
 
-    protected $casts = [
-        'issue_date' => 'date',
-        'type' => InvoiceType::class,
-    ];
+    protected function casts(): array
+    {
+        return [
+            'issue_date' => 'date',
+            'type' => InvoiceType::class,
+        ];
+    }
 
     public function items(): HasMany
     {
@@ -23,12 +26,12 @@ class Invoice extends Model
 
     public function seller(): BelongsTo
     {
-        return $this->belongsTo(Client::class, 'seller_id');
+        return $this->belongsTo(Entity::class, 'seller_id');
     }
 
     public function buyer(): BelongsTo
     {
-        return $this->belongsTo(Client::class, 'buyer_id');
+        return $this->belongsTo(Entity::class, 'buyer_id');
     }
 
     public function user(): BelongsTo

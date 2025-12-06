@@ -16,6 +16,7 @@
         "@rushstack/eslint-patch": "^1.8.0",
         "@tailwindcss/forms": "^0.5.3",
         "@tailwindcss/vite": "^4.0.0",
+        "@types/lodash": "^4.17.21",
         "@vitejs/plugin-vue": "^5.0.0",
         "@vue/eslint-config-prettier": "^9.0.0",
         "@vue/eslint-config-typescript": "^13.0.0",
@@ -39,6 +40,7 @@
     "dependencies": {
         "@fortawesome/vue-fontawesome": "^3.1.2",
         "@primeuix/themes": "^1.1.1",
+        "lodash": "^4.17.21",
         "primeicons": "^7.0.0",
         "primevue": "^4.3.5"
     }
