@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { FloatLabel, InputText, Message } from 'primevue';
 
 defineProps<{
     status?: string;
@@ -38,28 +35,35 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="email" value="Email" />
+                <FloatLabel variant="on">
+                    <InputText
+                        type="email"
+                        id="on_email"
+                        v-model="form.email"
+                        class="w-full"
+                        :invalid="!!form.errors.email"
+                    />
+                    <label for="on_password">Email</label>
+                </FloatLabel>
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
+                <Message
+                    severity="error"
+                    variant="simple"
+                    v-if="form.errors.email"
+                    class="mt-2"
+                >
+                    {{ form.errors.email }}
+                </Message>
             </div>
 
             <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
+                <Button
+                    type="submit"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
                     Email Password Reset Link
-                </PrimaryButton>
+                </Button>
             </div>
         </form>
     </GuestLayout>

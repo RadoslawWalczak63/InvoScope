@@ -1,11 +1,7 @@
 <script setup lang="ts">
-import DangerButton from '@/Components/DangerButton.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
 import Modal from '@/Components/Modal.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { useForm } from '@inertiajs/vue3';
+import { Button, FloatLabel, InputText, Message } from 'primevue';
 import { nextTick, ref } from 'vue';
 
 const confirmingUserDeletion = ref(false);
@@ -54,7 +50,11 @@ const closeModal = () => {
             </p>
         </header>
 
-        <DangerButton @click="confirmUserDeletion">Delete Account</DangerButton>
+        <Button
+            severity="danger"
+            @click="confirmUserDeletion"
+            label="Delete Account"
+        />
 
         <Modal :show="confirmingUserDeletion" @close="closeModal">
             <div class="p-6">
@@ -71,38 +71,40 @@ const closeModal = () => {
                 </p>
 
                 <div class="mt-6">
-                    <InputLabel
-                        for="password"
-                        value="Password"
-                        class="sr-only"
-                    />
+                    <FloatLabel variant="on">
+                        <InputText
+                            type="password"
+                            id="on_password"
+                            v-model="form.password"
+                            class="w-full"
+                            :invalid="!!form.errors.password"
+                        />
+                        <label for="on_password">Password</label>
+                    </FloatLabel>
 
-                    <TextInput
-                        id="password"
-                        ref="passwordInput"
-                        v-model="form.password"
-                        type="password"
-                        class="mt-1 block w-3/4"
-                        placeholder="Password"
-                        @keyup.enter="deleteUser"
-                    />
-
-                    <InputError :message="form.errors.password" class="mt-2" />
+                    <Message
+                        severity="error"
+                        variant="simple"
+                        v-if="form.errors.password"
+                        class="mt-2"
+                    >
+                        {{ form.errors.password }}
+                    </Message>
                 </div>
 
-                <div class="mt-6 flex justify-end">
-                    <SecondaryButton @click="closeModal">
-                        Cancel
-                    </SecondaryButton>
+                <div class="mt-6 flex justify-end gap-2">
+                    <Button
+                        severity="secondary"
+                        @click="closeModal"
+                        label="Cancel"
+                    />
 
-                    <DangerButton
-                        class="ms-3"
-                        :class="{ 'opacity-25': form.processing }"
+                    <Button
+                        severity="danger"
                         :disabled="form.processing"
                         @click="deleteUser"
-                    >
-                        Delete Account
-                    </DangerButton>
+                        label="Delete Account"
+                    />
                 </div>
             </div>
         </Modal>

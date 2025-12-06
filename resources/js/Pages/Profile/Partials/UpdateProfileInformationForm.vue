@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { FloatLabel, InputText, Message } from 'primevue';
 
 defineProps<{
     mustVerifyEmail?: Boolean;
@@ -35,34 +32,47 @@ const form = useForm({
             class="mt-6 space-y-6"
         >
             <div>
-                <InputLabel for="name" value="Name" />
+                <FloatLabel variant="on" class="mt-4">
+                    <InputText
+                        type="text"
+                        id="on_name"
+                        v-model="form.name"
+                        class="w-full"
+                        :invalid="!!form.errors.name"
+                    />
+                    <label for="on_name">Name</label>
+                </FloatLabel>
 
-                <TextInput
-                    id="name"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.name"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
-
-                <InputError class="mt-2" :message="form.errors.name" />
+                <Message
+                    severity="error"
+                    variant="simple"
+                    v-if="form.errors.name"
+                    class="mt-2"
+                >
+                    {{ form.errors.name }}
+                </Message>
             </div>
 
             <div>
-                <InputLabel for="email" value="Email" />
+                <FloatLabel variant="on">
+                    <InputText
+                        type="email"
+                        id="on_email"
+                        v-model="form.email"
+                        class="w-full"
+                        :invalid="!!form.errors.email"
+                    />
+                    <label for="on_email">Email</label>
+                </FloatLabel>
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
+                <Message
+                    severity="error"
+                    variant="simple"
+                    v-if="form.errors.email"
+                    class="mt-2"
+                >
+                    {{ form.errors.email }}
+                </Message>
             </div>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">
@@ -87,7 +97,11 @@ const form = useForm({
             </div>
 
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                <Button
+                    type="submit"
+                    :disabled="form.processing"
+                    label="Save"
+                />
 
                 <Transition
                     enter-active-class="transition ease-in-out"

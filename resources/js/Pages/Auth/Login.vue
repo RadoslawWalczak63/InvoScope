@@ -1,11 +1,7 @@
 <script setup lang="ts">
-import Checkbox from '@/Components/Checkbox.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { FloatLabel, InputText, Message } from 'primevue';
 
 defineProps<{
     canResetPassword?: boolean;
@@ -37,42 +33,55 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="email" value="Email" />
+                <FloatLabel variant="on">
+                    <InputText
+                        type="email"
+                        id="on_email"
+                        v-model="form.email"
+                        class="w-full"
+                        :invalid="!!form.errors.email"
+                    />
+                    <label for="on_password">Email</label>
+                </FloatLabel>
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
+                <Message
+                    severity="error"
+                    variant="simple"
+                    v-if="form.errors.email"
+                    class="mt-2"
+                >
+                    {{ form.errors.email }}
+                </Message>
             </div>
 
             <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+                <FloatLabel variant="on" class="mt-4">
+                    <InputText
+                        type="password"
+                        id="on_password"
+                        v-model="form.password"
+                        class="w-full"
+                        :invalid="!!form.errors.password"
+                    />
+                    <label for="on_password">Password</label>
+                </FloatLabel>
 
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                />
-
-                <InputError class="mt-2" :message="form.errors.password" />
+                <Message
+                    severity="error"
+                    variant="simple"
+                    v-if="form.errors.password"
+                    class="mt-2"
+                >
+                    {{ form.errors.password }}
+                </Message>
             </div>
 
             <div class="mt-4 block">
                 <label class="flex items-center">
-                    <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400"
-                        >Remember me</span
-                    >
+                    <Checkbox name="remember" v-model="form.remember" binary />
+                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">
+                        Remember me
+                    </span>
                 </label>
             </div>
 
@@ -85,13 +94,14 @@ const submit = () => {
                     Forgot your password?
                 </Link>
 
-                <PrimaryButton
+                <Button
+                    type="submit"
                     class="ms-4"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
                     Log in
-                </PrimaryButton>
+                </Button>
             </div>
         </form>
     </GuestLayout>

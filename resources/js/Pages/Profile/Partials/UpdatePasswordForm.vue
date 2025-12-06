@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { useForm } from '@inertiajs/vue3';
+import { FloatLabel, InputText, Message } from 'primevue';
 import { ref } from 'vue';
 
 const passwordInput = ref<HTMLInputElement | null>(null);
@@ -50,60 +47,79 @@ const updatePassword = () => {
 
         <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
             <div>
-                <InputLabel for="current_password" value="Current Password" />
+                <FloatLabel variant="on" class="mt-4">
+                    <InputText
+                        type="password"
+                        id="on_current_password"
+                        v-model="form.current_password"
+                        class="w-full"
+                        :invalid="!!form.errors.current_password"
+                    />
+                    <label for="on_current_password">Current Password</label>
+                </FloatLabel>
 
-                <TextInput
-                    id="current_password"
-                    ref="currentPasswordInput"
-                    v-model="form.current_password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    autocomplete="current-password"
-                />
-
-                <InputError
-                    :message="form.errors.current_password"
+                <Message
+                    severity="error"
+                    variant="simple"
+                    v-if="form.errors.current_password"
                     class="mt-2"
-                />
+                >
+                    {{ form.errors.current_password }}
+                </Message>
             </div>
 
             <div>
-                <InputLabel for="password" value="New Password" />
+                <FloatLabel variant="on" class="mt-4">
+                    <InputText
+                        type="password"
+                        id="on_password"
+                        v-model="form.password"
+                        class="w-full"
+                        :invalid="!!form.errors.password"
+                    />
+                    <label for="on_password">New Password</label>
+                </FloatLabel>
 
-                <TextInput
-                    id="password"
-                    ref="passwordInput"
-                    v-model="form.password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    autocomplete="new-password"
-                />
-
-                <InputError :message="form.errors.password" class="mt-2" />
+                <Message
+                    severity="error"
+                    variant="simple"
+                    v-if="form.errors.password"
+                    class="mt-2"
+                >
+                    {{ form.errors.password }}
+                </Message>
             </div>
 
             <div>
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirm Password"
-                />
+                <FloatLabel variant="on" class="mt-4">
+                    <InputText
+                        type="password"
+                        id="on_password_confirmation"
+                        v-model="form.password_confirmation"
+                        class="w-full"
+                        :invalid="!!form.errors.password_confirmation"
+                    />
+                    <label for="on_password_confirmation"
+                        >Confirm Password</label
+                    >
+                </FloatLabel>
 
-                <TextInput
-                    id="password_confirmation"
-                    v-model="form.password_confirmation"
-                    type="password"
-                    class="mt-1 block w-full"
-                    autocomplete="new-password"
-                />
-
-                <InputError
-                    :message="form.errors.password_confirmation"
+                <Message
+                    severity="error"
+                    variant="simple"
+                    v-if="form.errors.password_confirmation"
                     class="mt-2"
-                />
+                >
+                    {{ form.errors.password_confirmation }}
+                </Message>
             </div>
 
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                <Button
+                    type="submit"
+                    :disabled="form.processing"
+                    label="Save"
+                />
 
                 <Transition
                     enter-active-class="transition ease-in-out"
