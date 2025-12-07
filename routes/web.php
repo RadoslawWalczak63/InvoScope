@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QueuedJobController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
@@ -15,6 +16,7 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('entities', EntityController::class);
     Route::resource('invoices', InvoiceController::class);
+    Route::resource('queued-jobs', QueuedJobController::class);
 });
 
 require __DIR__.'/auth.php';

@@ -1,3 +1,11 @@
+export const QueuedJobStatus = {
+    "NEW": "New",
+    "QUEUED": "Queued",
+    "PROCESSING": "Processing",
+    "FINISHED": "Finished",
+    "FAILED": "Failed"
+};
+
 export const EntityType = {
     "COMPANY": "Company",
     "INDIVIDUAL": "Individual"

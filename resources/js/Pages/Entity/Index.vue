@@ -156,6 +156,12 @@ const {
                     :sortOrder="sortOrder"
                     tableStyle="min-width: 50rem"
                 >
+                    <template #empty>
+                        <div class="w-full p-2 text-center">
+                            No Entities Found
+                        </div>
+                    </template>
+
                     <Column field="type" header="Type" sortable />
                     <Column field="name" header="Name" />
                     <Column field="country" header="Country" sortable />

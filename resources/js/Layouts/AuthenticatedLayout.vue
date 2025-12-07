@@ -29,6 +29,12 @@ const navItems = [
         route: 'invoices.index',
         url: route('invoices.index'),
     },
+    {
+        label: 'Queued Jobs',
+        icon: 'pi pi-clock',
+        route: 'queued-jobs.index',
+        url: route('queued-jobs.index'),
+    },
 ];
 
 const userNavItems: MenuItem[] = [

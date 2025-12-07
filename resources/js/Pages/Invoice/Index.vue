@@ -155,6 +155,12 @@ const {
                     :sortOrder="sortOrder"
                     tableStyle="min-width: 50rem"
                 >
+                    <template #empty>
+                        <div class="w-full p-2 text-center">
+                            No Invoices Found
+                        </div>
+                    </template>
+
                     <Column field="number" header="Number" sortable />
 
                     <Column field="type" header="Type" sortable>

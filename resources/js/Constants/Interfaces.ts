@@ -71,6 +71,24 @@ export interface Invoice {
     updated_at: string;
 }
 
+export interface QueuedJob {
+    [key: string]: any;
+
+    id: number;
+    user_id: number;
+    user?: User;
+    job: string;
+    file_name: string;
+    status: string;
+    arguments: object;
+    result: object;
+    console_output: string;
+    started_at: string;
+    finished_at: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface PaginatedResource<T> {
     data: T[];
     meta: PaginationMeta;
