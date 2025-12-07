@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+        'base_url' => env('OPENAI_API_BASE_URL', 'https://api.openai.com/v1'),
+        'model' => env('OPENAI_API_MODEL', 'gpt-4o-mini'),
+        'model_max_tokens' => env('OPENAI_API_MODEL_MAX_TOKENS'),
+        'temperature' => env('OPENAI_API_TEMPERATURE', 0.2),
+    ],
 ];
