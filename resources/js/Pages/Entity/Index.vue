@@ -1,9 +1,20 @@
 <script setup lang="ts">
 import { useDataTable } from '@/Composables/useDataTable';
 import { Entity, PaginatedResource } from '@/Constants/Interfaces';
+import { EntityType } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { Button, Card, Column, DataTable, InputText } from 'primevue';
+import {
+    Button,
+    Card,
+    Column,
+    DataTable,
+    FloatLabel,
+    InputText,
+    Select,
+} from 'primevue';
+import { ref } from 'vue';
+import EntityCreateDialog from './Partials/EntityCreateDialog.vue';
 
 interface EntityFilters {
     type?: string;
@@ -14,12 +25,13 @@ interface EntityFilters {
 
 const props = defineProps<{
     entities: PaginatedResource<Entity>;
-    entityTypes: string[];
     state: {
         filters: EntityFilters;
         sort: string;
     };
 }>();
+
+const showCreateModal = ref(false);
 
 const {
     loading,
@@ -49,7 +61,24 @@ const {
     <Head title="Entities" />
 
     <AuthenticatedLayout>
-        <template #header>Entities</template>
+        <template #header>
+            <div class="flex items-center justify-between">
+                <h2
+                    class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200"
+                >
+                    Entities
+                </h2>
+            </div>
+        </template>
+
+        <div class="mb-4 flex justify-end">
+            <Button
+                label="New Entity"
+                icon="pi pi-plus"
+                size="small"
+                @click="showCreateModal = true"
+            />
+        </div>
 
         <Card class="mb-6">
             <template #title>
@@ -71,9 +100,8 @@ const {
                         <Select
                             v-model="filters.type"
                             inputId="type"
-                            :options="entityTypes"
+                            :options="Object.values(EntityType)"
                             class="w-full"
-                            variant="filled"
                             showClear
                         />
                         <label for="type">Type</label>
@@ -138,14 +166,12 @@ const {
                         <template #body="slotProps">
                             <Button
                                 @click="
-                                    () => {
-                                        router.visit(
-                                            route(
-                                                'entities.show',
-                                                slotProps.data.id,
-                                            ),
-                                        );
-                                    }
+                                    router.visit(
+                                        route(
+                                            'entities.show',
+                                            slotProps.data.id,
+                                        ),
+                                    )
                                 "
                                 label="View"
                                 icon="pi pi-eye"
@@ -157,5 +183,7 @@ const {
                 </DataTable>
             </template>
         </Card>
+
+        <EntityCreateDialog v-model:open="showCreateModal" />
     </AuthenticatedLayout>
 </template>

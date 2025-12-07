@@ -118,7 +118,7 @@ class DashboardController extends Controller
                     'issue_date' => $invoice->issue_date->toDateString(),
                     'amount' => (float) $invoice->items_sum_net_total,
                     'status' => $invoice->status,
-                    'type' => strtolower($invoice->type->value),
+                    'type' => $invoice->type->value,
                 ];
             });
 

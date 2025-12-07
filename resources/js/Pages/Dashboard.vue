@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getInvoiceStatusSeverity } from '@/Constants/Helpers';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import Button from 'primevue/button';
@@ -33,19 +34,6 @@ const formatCurrency = (value: number) => {
         style: 'currency',
         currency: 'USD',
     }).format(value);
-};
-
-const getSeverity = (status: string) => {
-    switch (status.toLowerCase()) {
-        case 'paid':
-            return 'success';
-        case 'pending':
-            return 'warn';
-        case 'overdue':
-            return 'danger';
-        default:
-            return 'secondary';
-    }
 };
 
 const barData = computed(() => ({
@@ -154,13 +142,7 @@ const polarOptions = ref({
     <Head title="Dashboard" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200"
-            >
-                Executive Overview
-            </h2>
-        </template>
+        <template #header> Executive Overview </template>
 
         <div class="space-y-6">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -343,7 +325,7 @@ const polarOptions = ref({
                                         <Tag
                                             :value="slotProps.data.status"
                                             :severity="
-                                                getSeverity(
+                                                getInvoiceStatusSeverity(
                                                     slotProps.data.status,
                                                 )
                                             "

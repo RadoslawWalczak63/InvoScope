@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import EditableField from '@/Components/EditableField.vue';
-import { Invoice, InvoiceItem, Resource } from '@/Constants/Interfaces'; // Assuming these exist
+import { getInvoiceStatusSeverity } from '@/Constants/Helpers';
+import {
+    Entity,
+    Invoice,
+    InvoiceItem,
+    PaginatedResource,
+    Resource,
+} from '@/Constants/Interfaces';
+import { InvoiceItemUnit, InvoiceStatus, InvoiceType } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import {
@@ -9,6 +17,7 @@ import {
     Column,
     ConfirmDialog,
     DataTable,
+    FloatLabel,
     InputNumber,
     InputText,
     Tag,
@@ -19,17 +28,35 @@ import { computed, ref } from 'vue';
 
 const props = defineProps<{
     invoice: Resource<Invoice>;
+    entities: PaginatedResource<Entity>;
 }>();
 
-// --- State & Form ---
 const confirm = useConfirm();
 const isEditing = ref(false);
 
-// Initialize form with deep copy of items to allow editing
-const form = useForm({
+interface InvoiceForm {
+    [key: string]: any;
+
+    number: string;
+    issue_date: string;
+    type: string;
+    status: string;
+    buyer_id: number;
+    buyer: Entity;
+    seller_id: number;
+    seller: Entity;
+    items: InvoiceItem[];
+}
+
+const form = useForm<InvoiceForm>({
     number: props.invoice.data.number,
     issue_date: props.invoice.data.issue_date,
     type: props.invoice.data.type,
+    status: props.invoice.data.status,
+    buyer_id: props.invoice.data.buyer_id,
+    buyer: props.invoice.data.buyer,
+    seller_id: props.invoice.data.seller_id,
+    seller: props.invoice.data.seller,
     items: props.invoice.data.items.map((item: InvoiceItem) => ({
         ...item,
         quantity: Number(item.quantity),
@@ -39,18 +66,15 @@ const form = useForm({
     })),
 });
 
-// --- Computed ---
-
-// Real-time calculation of totals based on Form state (editable)
 const invoiceTotals = computed(() => {
     let subtotal = 0;
     let tax = 0;
     let discount = 0;
 
-    form.items.forEach((item) => {
+    form.items.forEach((item: InvoiceItem) => {
         const lineTotal = item.price * item.quantity;
         subtotal += lineTotal;
-        tax += Number(item.tax_amount); // Simplified: assuming absolute value or calculated elsewhere
+        tax += Number(item.tax_amount);
         discount += Number(item.discount);
     });
 
@@ -62,12 +86,11 @@ const invoiceTotals = computed(() => {
     };
 });
 
-// --- Actions ---
-
 const startEditing = () => {
-    // Reset form to current props state before editing
     form.defaults({
         ...props.invoice.data,
+        buyer_id: props.invoice.data.buyer_id,
+        seller_id: props.invoice.data.seller_id,
         items: props.invoice.data.items.map((i) => ({ ...i })),
     });
     form.reset();
@@ -81,7 +104,13 @@ const cancelEditing = () => {
 };
 
 const saveInvoice = () => {
-    form.put(route('invoices.update', props.invoice.data.id), {
+    form.transform((data) => {
+        return {
+            ...data,
+            buyer_id: data.buyer?.id,
+            seller_id: data.seller?.id,
+        };
+    }).put(route('invoices.update', props.invoice.data.id), {
         preserveScroll: true,
         onSuccess: () => {
             isEditing.value = false;
@@ -103,8 +132,6 @@ const deleteInvoice = () => {
     });
 };
 
-// --- Item Management ---
-
 const addItem = () => {
     form.items.push({
         name: 'New Item',
@@ -113,7 +140,7 @@ const addItem = () => {
         price: 0,
         tax_amount: 0,
         discount: 0,
-        unit: 'pcs',
+        unit: InvoiceItemUnit.PIECE,
     });
 };
 
@@ -121,11 +148,10 @@ const removeItem = (index: number) => {
     form.items.splice(index, 1);
 };
 
-// Helper for formatting currency
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD', // Replace with your dynamic currency logic
+        currency: 'USD',
     }).format(value);
 };
 </script>
@@ -215,7 +241,7 @@ const formatCurrency = (value: number) => {
                 <Card class="lg:col-span-1">
                     <template #title>Details</template>
                     <template #content>
-                        <div class="flex flex-col gap-4">
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <EditableField
                                 label="Number"
                                 :isEditing="isEditing"
@@ -247,12 +273,41 @@ const formatCurrency = (value: number) => {
                                 </template>
                             </EditableField>
 
-                            <div class="flex flex-col gap-1">
-                                <span class="text-sm font-medium text-gray-500"
-                                    >Type</span
-                                >
-                                <span>{{ invoice.data.type }}</span>
-                            </div>
+                            <EditableField
+                                label="Status"
+                                :isEditing="isEditing"
+                            >
+                                <template #view>
+                                    <Tag
+                                        :value="invoice.data.status"
+                                        :severity="
+                                            getInvoiceStatusSeverity(
+                                                invoice.data.status,
+                                            )
+                                        "
+                                    />
+                                </template>
+                                <template #input>
+                                    <Select
+                                        v-model="form.status"
+                                        :options="Object.values(InvoiceStatus)"
+                                        class="w-full"
+                                    />
+                                </template>
+                            </EditableField>
+
+                            <EditableField label="Type" :isEditing="isEditing">
+                                <template #view>
+                                    {{ invoice.data.type }}
+                                </template>
+                                <template #input>
+                                    <Select
+                                        v-model="form.type"
+                                        :options="Object.values(InvoiceType)"
+                                        class="w-full"
+                                    />
+                                </template>
+                            </EditableField>
                         </div>
                     </template>
                 </Card>
@@ -261,48 +316,115 @@ const formatCurrency = (value: number) => {
                     <template #title>Parties</template>
                     <template #content>
                         <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-                            <div class="border-l-4 border-indigo-500 pl-4">
+                            <div
+                                class="space-y-2 border-l-4 border-indigo-500 pl-4"
+                            >
                                 <div
                                     class="mb-1 text-xs uppercase tracking-wider text-gray-500"
                                 >
                                     Bill From
                                 </div>
-                                <div class="text-lg font-bold">
-                                    {{ invoice.data.seller.company_name }}
-                                </div>
-                                <div class="text-sm text-gray-600">
-                                    <div>
-                                        {{ invoice.data.seller.address_line_1 }}
+                                <div>
+                                    <div class="text-lg font-bold">
+                                        <Select
+                                            v-if="isEditing"
+                                            v-model="form.buyer"
+                                            dropdown
+                                            :options="entities.data"
+                                            optionLabel="name"
+                                            size="small"
+                                            filter
+                                            class="mb-2"
+                                        />
+                                        <span v-else>
+                                            {{ invoice.data.buyer.name }}
+                                        </span>
                                     </div>
-                                    <div>
-                                        {{ invoice.data.seller.city }},
-                                        {{ invoice.data.seller.country }}
-                                    </div>
-                                    <div class="mt-2 text-indigo-600">
-                                        {{ invoice.data.seller.email }}
+                                    <div class="text-sm text-gray-600">
+                                        <div>
+                                            {{
+                                                isEditing
+                                                    ? form.buyer?.address_line_1
+                                                    : invoice.data.buyer
+                                                          .address_line_1
+                                            }}
+                                        </div>
+                                        <div>
+                                            {{
+                                                isEditing
+                                                    ? form.buyer?.city
+                                                    : invoice.data.buyer.city
+                                            }},
+                                            {{
+                                                isEditing
+                                                    ? form.buyer.country
+                                                    : invoice.data.buyer.country
+                                            }}
+                                        </div>
+                                        <div class="mt-2 text-emerald-600">
+                                            {{
+                                                isEditing
+                                                    ? form.buyer.email
+                                                    : invoice.data.buyer.email
+                                            }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="border-l-4 border-emerald-500 pl-4">
+                            <div
+                                class="space-y-2 border-l-4 border-emerald-500 pl-4"
+                            >
                                 <div
                                     class="mb-1 text-xs uppercase tracking-wider text-gray-500"
                                 >
                                     Bill To
                                 </div>
-                                <div class="text-lg font-bold">
-                                    {{ invoice.data.buyer.company_name }}
-                                </div>
-                                <div class="text-sm text-gray-600">
-                                    <div>
-                                        {{ invoice.data.buyer.address_line_1 }}
+                                <div>
+                                    <div class="text-lg font-bold">
+                                        <Select
+                                            v-if="isEditing"
+                                            v-model="form.seller"
+                                            dropdown
+                                            :options="entities.data"
+                                            optionLabel="name"
+                                            size="small"
+                                            filter
+                                            class="mb-2"
+                                        />
+                                        <span v-else>
+                                            {{ invoice.data.seller.name }}
+                                        </span>
                                     </div>
-                                    <div>
-                                        {{ invoice.data.buyer.city }},
-                                        {{ invoice.data.buyer.country }}
-                                    </div>
-                                    <div class="mt-2 text-emerald-600">
-                                        {{ invoice.data.buyer.email }}
+                                    <div class="text-sm text-gray-600">
+                                        <div>
+                                            {{
+                                                isEditing
+                                                    ? form.seller
+                                                          ?.address_line_1
+                                                    : invoice.data.seller
+                                                          .address_line_1
+                                            }}
+                                        </div>
+                                        <div>
+                                            {{
+                                                isEditing
+                                                    ? form.seller?.city
+                                                    : invoice.data.buyer.city
+                                            }},
+                                            {{
+                                                isEditing
+                                                    ? form.seller.country
+                                                    : invoice.data.buyer.country
+                                            }}
+                                        </div>
+                                        <div class="mt-2 text-emerald-600">
+                                            {{
+                                                isEditing
+                                                    ? form.seller.email
+                                                    : invoice.data.buyer.email
+                                            }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -344,7 +466,7 @@ const formatCurrency = (value: number) => {
                                         SKU: {{ slotProps.data.sku || '—' }}
                                     </div>
                                 </div>
-                                <div v-else class="flex flex-col gap-4">
+                                <div v-else class="my-2 flex flex-col gap-2">
                                     <FloatLabel variant="on">
                                         <InputText
                                             v-model="slotProps.data.name"
@@ -362,9 +484,18 @@ const formatCurrency = (value: number) => {
                                             class="w-full text-sm"
                                             id="item-desc"
                                         />
-                                        <label for="item-desc">
-                                            Description
-                                        </label>
+                                        <label for="item-desc"
+                                            >Description</label
+                                        >
+                                    </FloatLabel>
+
+                                    <FloatLabel variant="on">
+                                        <InputText
+                                            v-model="slotProps.data.sku"
+                                            id="item-sku"
+                                            class="w-full"
+                                        />
+                                        <label for="item-sku">SKU</label>
                                     </FloatLabel>
                                 </div>
                             </template>
@@ -375,18 +506,31 @@ const formatCurrency = (value: number) => {
                                 <span v-if="!isEditing">
                                     {{ slotProps.data.quantity }}
                                     <span class="text-xs text-gray-500">{{
-                                        slotProps.data.unit
+                                        slotProps.data.unit_abbreviation
                                     }}</span>
                                 </span>
-                                <InputNumber
-                                    v-else
-                                    v-model="slotProps.data.quantity"
-                                    showButtons
-                                    buttonLayout="horizontal"
-                                    :min="0"
-                                    inputClass="w-16 text-center"
-                                    class="w-full"
-                                />
+                                <div v-else>
+                                    <InputNumber
+                                        v-model="slotProps.data.quantity"
+                                        showButtons
+                                        buttonLayout="horizontal"
+                                        :min="0"
+                                        inputClass="w-16 text-center"
+                                        class="w-full"
+                                    />
+
+                                    <FloatLabel variant="on" class="mt-4">
+                                        <Select
+                                            v-model="slotProps.data.unit"
+                                            :options="
+                                                Object.values(InvoiceItemUnit)
+                                            "
+                                            id="item-unit"
+                                            class="w-full"
+                                        />
+                                        <label for="item-unit">Unit</label>
+                                    </FloatLabel>
+                                </div>
                             </template>
                         </Column>
 
@@ -453,6 +597,26 @@ const formatCurrency = (value: number) => {
                                 />
                             </template>
                         </Column>
+
+                        <template #empty>
+                            <div
+                                class="flex flex-col items-center justify-center p-4"
+                                v-if="!isEditing"
+                            >
+                                <Button
+                                    label="Add Item"
+                                    icon="pi pi-plus"
+                                    size="small"
+                                    class="ml-2"
+                                    @click="
+                                        () => {
+                                            startEditing();
+                                            addItem();
+                                        }
+                                    "
+                                />
+                            </div>
+                        </template>
                     </DataTable>
                 </template>
 

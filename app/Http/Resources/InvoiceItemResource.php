@@ -2,12 +2,15 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\InvoiceItemUnit;
 use App\Models\InvoiceItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @mixin InvoiceItem
+ *
+ * @property InvoiceItemUnit $unit
  */
 class InvoiceItemResource extends JsonResource
 {
@@ -20,6 +23,7 @@ class InvoiceItemResource extends JsonResource
             'description' => $this->description,
             'quantity' => $this->quantity,
             'unit' => $this->unit,
+            'unit_abbreviation' => $this->unit->abbreviation(),
             'price' => (float) $this->price,
             'total' => (float) $this->total,
             'tax' => $this->tax,

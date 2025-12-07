@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
+use App\Http\Resources\EntityResource;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Builder;
@@ -44,7 +46,7 @@ class InvoiceController extends Controller
 
         return Inertia::render('Invoice/Index', [
             'invoices' => InvoiceResource::collection($invoices),
-            'invoiceTypes' => InvoiceType::cases(),
+            'entities' => EntityResource::collection($request->user()->entities),
             'state' => [
                 'filters' => $request->input('filter', []),
                 'sort' => $request->input('sort', '-issue_date'),
@@ -58,21 +60,27 @@ class InvoiceController extends Controller
 
         return Inertia::render('Invoice/Show', [
             'invoice' => new InvoiceResource($invoice),
+            'entities' => EntityResource::collection($request->user()->entities),
+            'statuses' => InvoiceStatus::cases(),
         ]);
     }
 
     public function update(Request $request, Invoice $invoice): RedirectResponse
     {
-        // TODO: Fix updateing invoice items
-
         $request->validate([
             'number' => 'required|string|max:255',
             'issue_date' => 'required|date',
             'type' => ['required', new Enum(InvoiceType::class)],
-            'items' => 'required|array|min:1',
+            'status' => ['required', new Enum(InvoiceStatus::class)],
+            'buyer_id' => 'required|exists:entities,id',
+            'seller_id' => 'required|exists:entities,id',
+            'items' => 'sometimes|array',
             'items.*.id' => 'nullable|exists:invoice_items,id',
-            'items.*.description' => 'required|string|max:1000',
+            'items.*.name' => 'required|string|max:255',
+            'items.*.description' => 'nullable|string|max:1000',
+            'items.*.sku' => 'nullable|string|max:255',
             'items.*.quantity' => 'required|numeric|min:0',
+            'items.*.unit' => 'nullable|string|max:100',
             'items.*.price' => 'required|numeric|min:0',
             'items.*.tax_amount' => 'required|numeric|min:0',
             'items.*.discount' => 'required|numeric|min:0',
@@ -82,24 +90,51 @@ class InvoiceController extends Controller
             'number' => $request->input('number'),
             'issue_date' => $request->input('issue_date'),
             'type' => $request->input('type'),
+            'status' => $request->input('status'),
+            'buyer_id' => $request->input('buyer_id'),
+            'seller_id' => $request->input('seller_id'),
         ]);
 
-        $invoice->items()->delete();
+        $inputItems = collect($request->input('items'));
+        $inputItemIds = $inputItems->pluck('id')->filter()->toArray();
 
-        foreach ($request->input('items') as $itemData) {
-            $invoice->items()->create([
-                'name' => $itemData['name'],
-                'description' => $itemData['description'],
-                'quantity' => $itemData['quantity'],
-                'price' => $itemData['price'],
-                'tax_amount' => $itemData['tax_amount'],
-                'discount' => $itemData['discount'],
-            ]);
+        $invoice->items()->whereNotIn('id', $inputItemIds)->delete();
+
+        foreach ($inputItems as $itemData) {
+            $invoice->items()->updateOrCreate(
+                ['id' => $itemData['id'] ?? null],
+                [
+                    'name' => $itemData['name'],
+                    'description' => $itemData['description'] ?? '',
+                    'quantity' => $itemData['quantity'],
+                    'unit' => $itemData['unit'],
+                    'price' => $itemData['price'],
+                    'tax_amount' => $itemData['tax_amount'],
+                    'discount' => $itemData['discount'],
+                ]
+            );
         }
 
         return redirect()
             ->route('invoices.show', $invoice)
             ->with('success', 'Invoice updated successfully.');
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'number' => 'required|string|max:255',
+            'issue_date' => 'required|date',
+            'type' => ['required', new Enum(InvoiceType::class)],
+            'buyer_id' => 'required|exists:entities,id',
+            'seller_id' => 'required|exists:entities,id',
+        ]);
+
+        $invoice = Invoice::create($validated);
+
+        return redirect()
+            ->route('invoices.show', $invoice)
+            ->with('success', 'Invoice created successfully.');
     }
 
     public function destroy(Request $request, Invoice $invoice): RedirectResponse

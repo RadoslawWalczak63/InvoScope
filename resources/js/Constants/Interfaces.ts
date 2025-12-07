@@ -52,6 +52,7 @@ export interface InvoiceItem {
     tax_amount: number;
     discount: number;
     unit: string;
+    unit_abbreviation?: string;
 }
 
 export interface Invoice {
@@ -61,6 +62,8 @@ export interface Invoice {
     status: string;
     issue_date: string;
     due_date?: string;
+    buyer_id: number;
+    seller_id: number;
     buyer: Entity;
     seller: Entity;
     items: InvoiceItem[];

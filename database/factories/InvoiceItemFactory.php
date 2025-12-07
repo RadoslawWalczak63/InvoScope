@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\InvoiceItemUnit;
 use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -26,7 +27,7 @@ class InvoiceItemFactory extends Factory
             'tax' => ($taxRate * 100).'%',
             'tax_amount' => $taxAmount,
             'discount' => $discount,
-            'unit' => $this->faker->randomElement(['pcs', 'hrs', 'kg', 'm']),
+            'unit' => $this->faker->randomElement(InvoiceItemUnit::cases()),
             'sku' => strtoupper($this->faker->bothify('??-####')),
         ];
     }

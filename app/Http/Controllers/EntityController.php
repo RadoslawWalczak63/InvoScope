@@ -43,7 +43,6 @@ class EntityController extends Controller
 
         return Inertia::render('Entity/Index', [
             'entities' => EntityResource::collection($entities),
-            'entityTypes' => EntityType::cases(),
             'state' => [
                 'filters' => $request->input('filter', []),
                 'sort' => $request->input('sort', '-created_at'),
@@ -87,6 +86,31 @@ class EntityController extends Controller
         return redirect()
             ->route('entities.show', $entity)
             ->with('success', 'Entity updated successfully.');
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'company_name' => ['nullable', 'required_without:first_name', 'string', 'max:255'],
+            'first_name' => ['nullable', 'required_without:company_name', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
+            'tax_id' => ['nullable', 'string', 'max:100'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'address_line_1' => ['nullable', 'string', 'max:255'],
+            'address_line_2' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'state' => ['nullable', 'string', 'max:100'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
+            'country' => ['nullable', 'string', 'max:100'],
+            'type' => ['required', 'string', new Enum(EntityType::class)],
+        ]);
+
+        $request->user()->entities()->create($validated);
+
+        return redirect()
+            ->route('entities.index')
+            ->with('success', 'Entity created successfully.');
     }
 
     public function destroy(Request $request, Entity $entity): RedirectResponse

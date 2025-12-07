@@ -175,7 +175,10 @@ const toggleUserMenu = (event: Event) => {
                         />
                     </div>
 
-                    <div v-if="$slots.header" class="font-bold">
+                    <div
+                        v-if="$slots.header"
+                        class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200"
+                    >
                         <slot name="header" />
                     </div>
                 </div>

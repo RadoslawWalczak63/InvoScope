@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { useDataTable } from '@/Composables/useDataTable';
-import { Invoice, PaginatedResource } from '@/Constants/Interfaces';
-import { InvoiceStatus, InvoiceType } from '@/Enum';
+import {
+    getInvoiceStatusSeverity,
+    getInvoiceTypeSeverity,
+} from '@/Constants/Helpers';
+import { Entity, Invoice, PaginatedResource } from '@/Constants/Interfaces';
+import { InvoiceType } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import InvoiceCreateDialog from '@/Pages/Invoice/Partials/InvoiceCreateDialog.vue';
 import { Head, router } from '@inertiajs/vue3';
 import {
     Button,
@@ -13,6 +18,7 @@ import {
     InputText,
     Select,
 } from 'primevue';
+import { ref } from 'vue';
 
 interface InvoiceFilters {
     type?: string;
@@ -23,12 +29,14 @@ interface InvoiceFilters {
 
 const props = defineProps<{
     invoices: PaginatedResource<Invoice>;
-    invoiceTypes: string[];
+    entities: PaginatedResource<Entity>;
     state: {
         filters: InvoiceFilters;
         sort: string;
     };
 }>();
+
+const showCreateModal = ref(false);
 
 const {
     loading,
@@ -52,28 +60,6 @@ const {
     initialPerPage: props.invoices.meta.per_page,
     initialPage: props.invoices.meta.current_page,
 });
-
-const getStatusSeverity = (status: string) => {
-    switch (status) {
-        case InvoiceStatus.DRAFT:
-            return 'secondary';
-        case InvoiceStatus.SENT:
-            return 'warning';
-        case InvoiceStatus.PAID:
-            return 'success';
-        case InvoiceStatus.OVERDUE:
-            return 'danger';
-    }
-};
-
-const getTypeSeverity = (type: string) => {
-    switch (type) {
-        case InvoiceType.EXPENSE:
-            return 'warn';
-        case InvoiceType.INCOME:
-            return 'success';
-    }
-};
 </script>
 
 <template>
@@ -81,6 +67,15 @@ const getTypeSeverity = (type: string) => {
 
     <AuthenticatedLayout>
         <template #header>Invoices</template>
+
+        <div class="mb-4 flex justify-end">
+            <Button
+                label="New Invoice"
+                icon="pi pi-plus"
+                size="small"
+                @click="showCreateModal = true"
+            />
+        </div>
 
         <Card class="mb-6">
             <template #title>
@@ -102,7 +97,7 @@ const getTypeSeverity = (type: string) => {
                         <Select
                             v-model="filters.type"
                             inputId="type"
-                            :options="invoiceTypes"
+                            :options="Object.values(InvoiceType)"
                             class="w-full"
                             variant="filled"
                             showClear
@@ -166,7 +161,9 @@ const getTypeSeverity = (type: string) => {
                         <template #body="slotProps">
                             <Tag
                                 :value="slotProps.data.type"
-                                :severity="getTypeSeverity(slotProps.data.type)"
+                                :severity="
+                                    getInvoiceTypeSeverity(slotProps.data.type)
+                                "
                                 size="small"
                             />
                         </template>
@@ -177,7 +174,9 @@ const getTypeSeverity = (type: string) => {
                             <Tag
                                 :value="slotProps.data.status"
                                 :severity="
-                                    getStatusSeverity(slotProps.data.status)
+                                    getInvoiceStatusSeverity(
+                                        slotProps.data.status,
+                                    )
                                 "
                                 size="small"
                             />
@@ -223,5 +222,10 @@ const getTypeSeverity = (type: string) => {
                 </DataTable>
             </template>
         </Card>
+
+        <InvoiceCreateDialog
+            :open="showCreateModal"
+            :entities="entities.data"
+        />
     </AuthenticatedLayout>
 </template>

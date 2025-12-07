@@ -22,6 +22,8 @@ class InvoiceResource extends JsonResource
             'type' => $this->type,
             'status' => $this->status,
             'issue_date' => $this->issue_date->toDateString(),
+            'buyer_id' => $this->buyer_id,
+            'seller_id' => $this->seller_id,
             'buyer' => new EntityResource($this->whenLoaded('buyer')),
             'seller' => new EntityResource($this->whenLoaded('seller')),
             'items' => InvoiceItemResource::collection($this->whenLoaded('items')),
