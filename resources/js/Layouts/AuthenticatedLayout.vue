@@ -214,6 +214,17 @@ const toggleUserMenu = (event: Event) => {
             </main>
         </div>
 
-        <Menu ref="userMenu" :model="userNavItems" :popup="true" />
+        <Menu ref="userMenu" :model="userNavItems" popup>
+            <template #item="{ item, props }">
+                <Link
+                    :href="item.href"
+                    class="flex w-full items-center gap-2 px-3 py-2"
+                    v-bind="props.action"
+                >
+                    <span :class="item.icon" />
+                    <span>{{ item.label }}</span>
+                </Link>
+            </template>
+        </Menu>
     </div>
 </template>
