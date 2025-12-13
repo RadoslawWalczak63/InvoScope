@@ -40,4 +40,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Invoice::class);
     }
+
+    public function queuedJobs(): HasMany
+    {
+        return $this->hasMany(QueuedJob::class);
+    }
 }

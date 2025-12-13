@@ -5,6 +5,7 @@ use App\Http\Controllers\EntityController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QueuedJobController;
+use App\Http\Controllers\UploadInvoiceController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
@@ -15,6 +16,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('entities', EntityController::class);
+    Route::post('invoices/upload', UploadInvoiceController::class)->name('invoices.upload');
     Route::resource('invoices', InvoiceController::class);
     Route::resource('queued-jobs', QueuedJobController::class);
 });

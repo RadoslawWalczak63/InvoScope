@@ -8,6 +8,7 @@ import { Entity, Invoice, PaginatedResource } from '@/Constants/Interfaces';
 import { InvoiceType } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InvoiceCreateDialog from '@/Pages/Invoice/Partials/InvoiceCreateDialog.vue';
+import InvoiceUploadDialog from '@/Pages/Invoice/Partials/InvoiceUploadDialog.vue';
 import { Head, router } from '@inertiajs/vue3';
 import {
     Button,
@@ -34,9 +35,11 @@ const props = defineProps<{
         filters: InvoiceFilters;
         sort: string;
     };
+    models: Array<{ id: string; name: string }>;
 }>();
 
 const showCreateModal = ref(false);
+const showUploadModal = ref(false);
 
 const {
     loading,
@@ -68,7 +71,15 @@ const {
     <AuthenticatedLayout>
         <template #header>Invoices</template>
 
-        <div class="mb-4 flex justify-end">
+        <div class="mb-4 flex justify-end gap-2">
+            <Button
+                severity="secondary"
+                label="Upload Invoice"
+                icon="pi pi-file-arrow-up"
+                size="small"
+                @click="showUploadModal = true"
+            />
+
             <Button
                 label="New Invoice"
                 icon="pi pi-plus"
@@ -232,6 +243,13 @@ const {
         <InvoiceCreateDialog
             :open="showCreateModal"
             :entities="entities.data"
+            @update:open="(newVal) => (showCreateModal = newVal)"
+        />
+
+        <InvoiceUploadDialog
+            v-model:open="showUploadModal"
+            :models="models"
+            @update:open="(newVal) => (showUploadModal = newVal)"
         />
     </AuthenticatedLayout>
 </template>

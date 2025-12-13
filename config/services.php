@@ -42,4 +42,9 @@ return [
         'model_max_tokens' => env('OPENAI_API_MODEL_MAX_TOKENS'),
         'temperature' => env('OPENAI_API_TEMPERATURE', 0.2),
     ],
+
+    'copilot' => [
+        'key' => env('COPILOT_API_KEY'),
+        'base_url' => env('COPILOT_API_BASE_URL', 'https://models.github.ai'),
+    ],
 ];

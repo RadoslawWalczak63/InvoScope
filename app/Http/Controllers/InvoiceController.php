@@ -7,7 +7,10 @@ use App\Enums\InvoiceType;
 use App\Http\Resources\EntityResource;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
+use App\Services\CopilotService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Enum;
@@ -18,7 +21,11 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class InvoiceController extends Controller
 {
-    public function index(Request $request): Response
+    /**
+     * @throws RequestException
+     * @throws ConnectionException
+     */
+    public function index(Request $request, CopilotService $copilotService): Response
     {
         $request->validate([
             'per_page' => 'integer|min:1|max:100',
@@ -44,9 +51,23 @@ class InvoiceController extends Controller
             ->paginate($request->input('per_page', 20))
             ->withQueryString();
 
+        $models = $copilotService
+            ->getModels()
+            ->filter(function ($model) {
+                return in_array('image', $model->supported_input_modalities);
+            })
+            ->map(function ($model) {
+                return [
+                    'id' => $model->id,
+                    'name' => $model->name,
+                ];
+            })
+            ->values();
+
         return Inertia::render('Invoice/Index', [
             'invoices' => InvoiceResource::collection($invoices),
             'entities' => EntityResource::collection($request->user()->entities),
+            'models' => $models,
             'state' => [
                 'filters' => $request->input('filter', []),
                 'sort' => $request->input('sort', '-issue_date'),
@@ -64,6 +85,34 @@ class InvoiceController extends Controller
             'statuses' => InvoiceStatus::cases(),
         ]);
     }
+
+    //        $invoicePath = storage_path('test.png');
+    //        $imageBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($invoicePath));
+    //
+    //        $response = $copilotService->getResponse(
+    //            'openai/gpt-4.1-mini',
+    //            [
+    //                [
+    //                    'role' => 'system',
+    //                    'content' => 'You are an assistant that extracts invoice data from images.',
+    //                ],
+    //                [
+    //                    'role' => 'user',
+    //                    'content' => [
+    //                        [
+    //                            'type' => 'text',
+    //                            'text' => 'What is in this image?',
+    //                        ],
+    //                        [
+    //                            'type' => 'image_url',
+    //                            'image_url' => [
+    //                                'url' => $imageBase64,
+    //                            ],
+    //                        ],
+    //                    ],
+    //                ],
+    //            ]
+    //        );
 
     public function update(Request $request, Invoice $invoice): RedirectResponse
     {
