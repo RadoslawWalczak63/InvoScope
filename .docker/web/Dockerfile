@@ -15,6 +15,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+# Install Imagick
+RUN apt-get update; \
+    apt-get install -y libmagickwand-dev; \
+    pecl install imagick; \
+    docker-php-ext-enable imagick;
+
 # Configure PHP settings
 RUN sed -i -e "s/;\?max_input_vars = .*/max_input_vars = 5000/g" \
            -e "s/post_max_size = 8M/post_max_size = 800M/g" \
