@@ -40,6 +40,7 @@ const submit = () => {
                         v-model="form.email"
                         class="w-full"
                         :invalid="!!form.errors.email"
+                        name="email"
                     />
                     <label for="on_password">Email</label>
                 </FloatLabel>
@@ -58,6 +59,7 @@ const submit = () => {
                 <FloatLabel variant="on" class="mt-4">
                     <InputText
                         type="password"
+                        name="password"
                         id="on_password"
                         v-model="form.password"
                         class="w-full"

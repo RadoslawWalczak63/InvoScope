@@ -11,6 +11,13 @@ defineProps<{
 
 const emit = defineEmits(['update:open']);
 
+interface CreateInvoiceErrors {
+    number?: string;
+    issue_date?: string;
+    type?: string;
+    status?: string;
+}
+
 interface CreateInvoiceForm {
     [key: string]: any;
 
@@ -29,11 +36,13 @@ const form = useForm<CreateInvoiceForm>({
     issue_date: new Date().toISOString().split('T')[0],
     type: '',
     status: InvoiceStatus.DRAFT,
-    buyer: null as Entity | null,
-    seller: null as Entity | null,
-    buyer_id: null as number | null,
-    seller_id: null as number | null,
-});
+    buyer: null,
+    seller: null,
+    buyer_id: null,
+    seller_id: null,
+}) as ReturnType<typeof useForm<CreateInvoiceForm>> & {
+    errors: CreateInvoiceErrors;
+};
 
 const submit = () => {
     form.transform((data) => {

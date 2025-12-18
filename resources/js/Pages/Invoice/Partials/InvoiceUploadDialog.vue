@@ -10,6 +10,12 @@ import {
 } from 'primevue';
 import { FileUploadSelectEvent } from 'primevue/fileupload';
 
+declare global {
+    interface File {
+        readonly objectURL: string;
+    }
+}
+
 defineProps<{
     open: boolean;
     models: Array<{ id: string; name: string }>;

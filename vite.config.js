@@ -7,18 +7,23 @@ import { defineConfig, loadEnv } from 'vite';
 export default ({ mode }) => {
     process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
 
+    const isTesting = mode === 'testing';
+
+    const hmrHost = process.env.VITE_HMR_HOST || 'invoscope.localhost';
+
     return defineConfig({
         server: {
             host: true,
-            port: 5173,
-            https: false,
-            cors: {
-                origin: '*',
-            },
-            hmr: {
-                host: process.env.VITE_HMR_HOST,
-            },
-            allowedHosts: true,
+            port: parseInt(process.env.VITE_PORT) || 5173,
+            cors: { origin: '*' },
+            hmr: isTesting
+                ? undefined
+                : {
+                      host: hmrHost,
+                      port: parseInt(process.env.VITE_PORT) || 5173,
+                      protocol: 'ws',
+                  },
+            allowedHosts: 'all',
         },
         plugins: [
             laravel({
