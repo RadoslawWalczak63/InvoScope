@@ -86,34 +86,6 @@ class InvoiceController extends Controller
         ]);
     }
 
-    //        $invoicePath = storage_path('test.png');
-    //        $imageBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($invoicePath));
-    //
-    //        $response = $copilotService->getResponse(
-    //            'openai/gpt-4.1-mini',
-    //            [
-    //                [
-    //                    'role' => 'system',
-    //                    'content' => 'You are an assistant that extracts invoice data from images.',
-    //                ],
-    //                [
-    //                    'role' => 'user',
-    //                    'content' => [
-    //                        [
-    //                            'type' => 'text',
-    //                            'text' => 'What is in this image?',
-    //                        ],
-    //                        [
-    //                            'type' => 'image_url',
-    //                            'image_url' => [
-    //                                'url' => $imageBase64,
-    //                            ],
-    //                        ],
-    //                    ],
-    //                ],
-    //            ]
-    //        );
-
     public function update(Request $request, Invoice $invoice): RedirectResponse
     {
         $request->validate([

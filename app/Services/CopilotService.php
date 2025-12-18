@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -32,22 +30,120 @@ class CopilotService
         });
     }
 
-    /**
-     * @throws RequestException
-     * @throws ConnectionException
-     */
     public function getResponse(string $modelId, array $messages, array $responseFormat = ['type' => 'text']): object
     {
-        $response = Http::withToken($this->apiKey)
-            ->timeout(90)
-            ->post($this->baseUrl.'/inference/chat/completions', [
-                'model' => $modelId,
-                'messages' => $messages,
-                'response_format' => $responseFormat,
-            ]);
+        $cacheKey = 'copilot_response_'.md5($modelId.serialize($messages).serialize($responseFormat));
 
-        $response->throw();
+        return Cache::remember($cacheKey, now()->addDay(), function () use ($modelId, $messages, $responseFormat) {
+            $response = Http::withToken($this->apiKey)
+                ->timeout(90)
+                ->post($this->baseUrl.'/inference/chat/completions', [
+                    'model' => $modelId,
+                    'messages' => $messages,
+                    'response_format' => $responseFormat,
+                ]);
 
-        return $response->object();
+            $response->throw();
+
+            return $response->object();
+        });
+    }
+
+    public function getInvoiceJsonScheme(): array
+    {
+        return [
+            'type' => 'json_schema',
+            'json_schema' => [
+                'name' => 'invoice_extraction',
+                'strict' => true,
+                'schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'number' => [
+                            'type' => 'string',
+                            'description' => 'The invoice number (e.g. INV-001)',
+                        ],
+                        'issue_date' => [
+                            'type' => 'string',
+                            'format' => 'date',
+                            'description' => 'YYYY-MM-DD',
+                        ],
+                        'type' => [
+                            'type' => 'string',
+                            'enum' => ['Income', 'Expense'],
+                            'description' => 'Determine if this is an Income (Sales) or Expense (Purchase) invoice.',
+                        ],
+
+                        'buyer_details' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'name' => ['type' => ['string', 'null']],
+                                'tax_id' => ['type' => ['string', 'null']],
+                                'address' => ['type' => ['string', 'null']],
+                            ],
+                            'required' => ['name', 'tax_id', 'address'],
+                            'additionalProperties' => false,
+                        ],
+                        'seller_details' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'name' => ['type' => ['string', 'null']],
+                                'tax_id' => ['type' => ['string', 'null']],
+                                'address' => ['type' => ['string', 'null']],
+                            ],
+                            'required' => ['name', 'tax_id', 'address'],
+                            'additionalProperties' => false,
+                        ],
+
+                        'items' => [
+                            'type' => 'array',
+                            'items' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'name' => ['type' => 'string'],
+                                    'description' => ['type' => ['string', 'null']],
+                                    'sku' => ['type' => ['string', 'null']],
+                                    'quantity' => ['type' => 'number'],
+                                    'unit' => [
+                                        'type' => ['string', 'null'],
+                                        'enum' => [
+                                            'Hour', 'Day', 'Week', 'Month', 'Year',
+                                            'Piece', 'Set', 'Kit', 'Box', 'Pack', 'Dozen',
+                                            'Kilogram', 'Gram', 'Tonne', 'Meter', 'Centimeter',
+                                            'Square Meter', 'Liter', 'Service', 'Flat Rate', 'Project',
+                                        ],
+                                    ],
+                                    'price' => ['type' => 'number'],
+                                    'tax_amount' => ['type' => 'number'],
+                                    'discount' => ['type' => 'number'],
+                                ],
+
+                                'required' => [
+                                    'name',
+                                    'description',
+                                    'sku',
+                                    'quantity',
+                                    'unit',
+                                    'price',
+                                    'tax_amount',
+                                    'discount',
+                                ],
+                                'additionalProperties' => false,
+                            ],
+                        ],
+                    ],
+
+                    'required' => [
+                        'number',
+                        'issue_date',
+                        'type',
+                        'buyer_details',
+                        'seller_details',
+                        'items',
+                    ],
+                    'additionalProperties' => false,
+                ],
+            ],
+        ];
     }
 }

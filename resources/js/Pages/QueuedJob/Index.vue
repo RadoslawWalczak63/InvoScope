@@ -153,7 +153,10 @@ const {
                             <Button
                                 @click="
                                     router.visit(
-                                        route('jobs.show', slotProps.data.id),
+                                        route(
+                                            'queued-jobs.show',
+                                            slotProps.data.id,
+                                        ),
                                     )
                                 "
                                 label="Details"

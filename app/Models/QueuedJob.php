@@ -81,6 +81,7 @@ class QueuedJob extends Model
         $this->update([
             'status' => QueuedJobStatus::PROCESSING,
             'started_at' => now(),
+            'console_output' => '',
         ]);
     }
 

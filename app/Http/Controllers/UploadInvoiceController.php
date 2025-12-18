@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Console\Commands\ProcessInvoiceImport;
+use App\Models\QueuedJob;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -17,13 +18,18 @@ class UploadInvoiceController extends Controller
         ]);
 
         foreach ($request->file('files') as $file) {
-            $request->user()->queuedJobs()->create([
+            /**
+             * @var QueuedJob $queuedJob
+             */
+            $queuedJob = $request->user()->queuedJobs()->create([
                 'job' => ProcessInvoiceImport::class,
                 'arguments' => [
                     'file_path' => $file->store('invoices'),
                     'model_id' => $request->model_id,
                 ],
             ]);
+
+            $queuedJob->dispatch();
         }
 
         return response()
