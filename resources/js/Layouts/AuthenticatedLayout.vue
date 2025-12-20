@@ -101,6 +101,7 @@ const toggleUserMenu = (event: Event) => {
                 class="border-surface-200 dark:border-surface-800 border-t p-4"
             >
                 <button
+                    dusk="user-menu-button"
                     @click="toggleUserMenu"
                     class="hover:bg-surface-100 dark:hover:bg-surface-800 group flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors duration-200"
                 >
@@ -214,7 +215,7 @@ const toggleUserMenu = (event: Event) => {
             </main>
         </div>
 
-        <Menu ref="userMenu" :model="userNavItems" popup>
+        <Menu ref="userMenu" :model="userNavItems" popup id="user-menu">
             <template #item="{ item, props }">
                 <Link
                     :href="item.url ?? '#'"
