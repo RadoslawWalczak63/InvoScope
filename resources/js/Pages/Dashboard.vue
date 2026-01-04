@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getInvoiceStatusSeverity } from '@/Constants/Helpers';
-import { Currency, InvoiceType } from '@/Enum';
+import { InvoiceType } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { FloatLabel } from 'primevue';
@@ -27,6 +27,7 @@ const props = defineProps<{
     };
     recentInvoices: any[];
     selectedCurrency: string;
+    currencies: string[];
     filters: {
         startDate: string;
         endDate: string;
@@ -195,7 +196,7 @@ const polarOptions = ref({
                             <Select
                                 id="currency"
                                 v-model="form.currency"
-                                :options="Object.values(Currency)"
+                                :options="currencies"
                                 size="small"
                                 filter
                                 fluid
@@ -217,8 +218,11 @@ const polarOptions = ref({
                         <p
                             class="text-2xl font-black"
                             :class="{
-                                'text-orange-500': label === 'overdue',
-                                'text-emerald-500': label === 'profit',
+                                'text-orange-500':
+                                    label === 'overdue' && val > 0,
+                                'text-emerald-500':
+                                    label === 'profit' && val >= 0,
+                                'text-red-500': label === 'profit' && val < 0,
                             }"
                         >
                             {{ formatCurrency(val) }}

@@ -8,6 +8,7 @@ use App\Enums\InvoiceType;
 use App\Models\Invoice;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,9 +24,17 @@ class DashboardController extends Controller
         ]);
 
         $userId = $request->user()->id;
-        $currency = $request->input('currency', Currency::PLN);
         $startDate = $request->input('startDate', Carbon::now()->startOfMonth()->toDateString());
         $endDate = $request->input('endDate', Carbon::now()->endOfMonth()->toDateString());
+
+        $availableCurrencies = Invoice::query()
+            ->where('user_id', $userId)
+            ->whereBetween('issue_date', [$startDate, $endDate])
+            ->distinct()
+            ->pluck('currency')
+            ->map(fn ($value) => $value->value);
+
+        $currency = $availableCurrencies->intersect(Arr::wrap($request->input('currency')))->first() ?: $availableCurrencies->first() ?: Currency::PLN->value;
 
         $aggregates = Invoice::where('user_id', $userId)
             ->where('currency', $currency)
@@ -131,6 +140,7 @@ class DashboardController extends Controller
             ],
             'recentInvoices' => $recentInvoices,
             'selectedCurrency' => $currency,
+            'currencies' => $availableCurrencies,
             'filters' => [
                 'startDate' => $startDate,
                 'endDate' => $endDate,
