@@ -27,11 +27,13 @@ class InvoiceController extends Controller
 
         $invoices = QueryBuilder::for(Invoice::class)
             ->defaultSort('-issue_date')
-            ->allowedSorts(['number', 'type', 'issue_date', 'due_date', 'created_at'])
+            ->allowedSorts(['number', 'type', 'issue_date', 'due_date', 'paid_date', 'created_at'])
             ->allowedFilters([
                 AllowedFilter::partial('number'),
                 AllowedFilter::exact('type'),
                 AllowedFilter::exact('issue_date'),
+                AllowedFilter::exact('due_date'),
+                AllowedFilter::exact('paid_date'),
                 AllowedFilter::callback('buyer', function (Builder $query, $value) {
                     $query->whereHas('buyer', function (Builder $q) use ($value) {
                         $q->where('company_name', 'like', "%{$value}%")

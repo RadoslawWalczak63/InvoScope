@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import EditableField from '@/Components/EditableField.vue';
-import { getInvoiceStatusSeverity } from '@/Constants/Helpers';
+import {
+    getInvoiceStatusSeverity,
+    toDate,
+    toDateString,
+} from '@/Constants/Helpers';
 import {
     Entity,
     Invoice,
@@ -39,9 +43,9 @@ interface InvoiceForm {
     [key: string]: any;
 
     number: string;
-    issue_date: string;
-    due_date: string;
-    paid_date: string | null;
+    issue_date: Date | null;
+    due_date: Date | null;
+    paid_date: Date | null;
     type: string;
     status: string;
     currency: string;
@@ -54,9 +58,9 @@ interface InvoiceForm {
 
 const form = useForm<InvoiceForm>({
     number: props.invoice.data.number,
-    issue_date: props.invoice.data.issue_date,
-    due_date: props.invoice.data.due_date,
-    paid_date: props.invoice.data.paid_date,
+    issue_date: toDate(props.invoice.data.issue_date),
+    due_date: toDate(props.invoice.data.due_date),
+    paid_date: toDate(props.invoice.data.paid_date),
     type: props.invoice.data.type,
     status: props.invoice.data.status,
     currency: props.invoice.data.currency,
@@ -64,7 +68,7 @@ const form = useForm<InvoiceForm>({
     buyer: props.invoice.data.buyer,
     seller_id: props.invoice.data.seller_id,
     seller: props.invoice.data.seller,
-    items: props.invoice.data.items.map((item: InvoiceItem) => ({
+    items: props.invoice.data.items.map((item) => ({
         ...item,
         quantity: Number(item.quantity),
         price: Number(item.price),
@@ -78,9 +82,8 @@ const invoiceTotals = computed(() => {
     let tax = 0;
     let discount = 0;
 
-    form.items.forEach((item: InvoiceItem) => {
-        const lineTotal = item.price * item.quantity;
-        subtotal += lineTotal;
+    form.items.forEach((item) => {
+        subtotal += item.price * item.quantity;
         tax += Number(item.tax_amount);
         discount += Number(item.discount);
     });
@@ -95,11 +98,24 @@ const invoiceTotals = computed(() => {
 
 const startEditing = () => {
     form.defaults({
-        ...props.invoice.data,
+        number: props.invoice.data.number,
+        issue_date: toDate(props.invoice.data.issue_date),
+        due_date: toDate(props.invoice.data.due_date),
+        paid_date: toDate(props.invoice.data.paid_date),
+        type: props.invoice.data.type,
+        status: props.invoice.data.status,
         currency: props.invoice.data.currency,
         buyer_id: props.invoice.data.buyer_id,
+        buyer: props.invoice.data.buyer,
         seller_id: props.invoice.data.seller_id,
-        items: props.invoice.data.items.map((i) => ({ ...i })),
+        seller: props.invoice.data.seller,
+        items: props.invoice.data.items.map((i) => ({
+            ...i,
+            quantity: Number(i.quantity),
+            price: Number(i.price),
+            tax_amount: Number(i.tax_amount),
+            discount: Number(i.discount),
+        })),
     });
     form.reset();
     isEditing.value = true;
@@ -112,13 +128,14 @@ const cancelEditing = () => {
 };
 
 const saveInvoice = () => {
-    form.transform((data) => {
-        return {
-            ...data,
-            buyer_id: data.buyer?.id,
-            seller_id: data.seller?.id,
-        };
-    }).put(route('invoices.update', props.invoice.data.id), {
+    form.transform((data) => ({
+        ...data,
+        issue_date: toDateString(data.issue_date),
+        due_date: toDateString(data.due_date),
+        paid_date: toDateString(data.paid_date),
+        buyer_id: data.buyer?.id,
+        seller_id: data.seller?.id,
+    })).put(route('invoices.update', props.invoice.data.id), {
         preserveScroll: true,
         onSuccess: () => {
             isEditing.value = false;
@@ -266,54 +283,6 @@ const formatCurrency = (value: number) => {
                             </EditableField>
 
                             <EditableField
-                                label="Issue Date"
-                                :isEditing="isEditing"
-                            >
-                                <template #view
-                                    >{{ invoice.data.issue_date }}
-                                </template>
-                                <template #input>
-                                    <InputText
-                                        type="date"
-                                        v-model="form.issue_date"
-                                        class="w-full"
-                                    />
-                                </template>
-                            </EditableField>
-
-                            <EditableField
-                                label="Due Date"
-                                :isEditing="isEditing"
-                            >
-                                <template #view
-                                    >{{ invoice.data.due_date }}
-                                </template>
-                                <template #input>
-                                    <InputText
-                                        type="date"
-                                        v-model="form.due_date"
-                                        class="w-full"
-                                    />
-                                </template>
-                            </EditableField>
-
-                            <EditableField
-                                label="Paid Date"
-                                :isEditing="isEditing"
-                            >
-                                <template #view
-                                    >{{ invoice.data.paid_date || '—' }}
-                                </template>
-                                <template #input>
-                                    <InputText
-                                        type="date"
-                                        v-model="form.paid_date"
-                                        class="w-full"
-                                    />
-                                </template>
-                            </EditableField>
-
-                            <EditableField
                                 label="Currency"
                                 :isEditing="isEditing"
                             >
@@ -348,6 +317,65 @@ const formatCurrency = (value: number) => {
                                         v-model="form.status"
                                         :options="Object.values(InvoiceStatus)"
                                         class="w-full"
+                                    />
+                                </template>
+                            </EditableField>
+
+                            <EditableField
+                                label="Issue Date"
+                                :isEditing="isEditing"
+                            >
+                                <template #view
+                                    >{{ invoice.data.issue_date }}
+                                </template>
+                                <template #input>
+                                    <DatePicker
+                                        showIcon
+                                        showClear
+                                        fluid
+                                        dateFormat="yy-mm-dd"
+                                        iconDisplay="input"
+                                        v-model="form.issue_date"
+                                        class="w-full"
+                                    />
+                                </template>
+                            </EditableField>
+
+                            <EditableField
+                                label="Due Date"
+                                :isEditing="isEditing"
+                            >
+                                <template #view
+                                    >{{ invoice.data.due_date }}
+                                </template>
+                                <template #input>
+                                    <DatePicker
+                                        showIcon
+                                        showClear
+                                        fluid
+                                        iconDisplay="input"
+                                        v-model="form.due_date"
+                                        class="w-full"
+                                        dateFormat="yy-mm-dd"
+                                    />
+                                </template>
+                            </EditableField>
+
+                            <EditableField
+                                label="Paid Date"
+                                :isEditing="isEditing"
+                            >
+                                <template #view
+                                    >{{ invoice.data.paid_date || '—' }}
+                                </template>
+                                <template #input>
+                                    <DatePicker
+                                        v-model="form.paid_date"
+                                        showIcon
+                                        showClear
+                                        fluid
+                                        iconDisplay="input"
+                                        dateFormat="yy-mm-dd"
                                     />
                                 </template>
                             </EditableField>

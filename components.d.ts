@@ -11,6 +11,7 @@ declare module 'vue' {
     Badge: typeof import('primevue/badge')['default']
     Button: typeof import('primevue/button')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
+    DatePicker: typeof import('primevue/datepicker')['default']
     Select: typeof import('primevue/select')['default']
     Tag: typeof import('primevue/tag')['default']
   }

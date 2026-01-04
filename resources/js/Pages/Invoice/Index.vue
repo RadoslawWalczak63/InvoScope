@@ -25,7 +25,9 @@ interface InvoiceFilters {
     type?: string;
     number?: string;
     buyer?: string;
-    issue_date?: string;
+    issue_date?: Date;
+    due_date?: Date;
+    paid_date?: Date;
 }
 
 const props = defineProps<{
@@ -57,7 +59,9 @@ const {
         type: props.state.filters.type || '',
         number: props.state.filters.number || '',
         buyer: props.state.filters.buyer || '',
-        issue_date: props.state.filters.issue_date || '',
+        issue_date: props.state.filters.issue_date || undefined,
+        due_date: props.state.filters.due_date || undefined,
+        paid_date: props.state.filters.paid_date || undefined,
     },
     initialSort: props.state.sort,
     initialPerPage: props.invoices.meta.per_page,
@@ -103,14 +107,13 @@ const {
                 </div>
             </template>
             <template #content>
-                <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div class="grid grid-cols-2 gap-4 md:grid-cols-3">
                     <FloatLabel variant="on">
                         <Select
                             v-model="filters.type"
                             inputId="type"
                             :options="Object.values(InvoiceType)"
                             class="w-full"
-                            variant="filled"
                             showClear
                         />
                         <label for="type">Type</label>
@@ -135,13 +138,42 @@ const {
                     </FloatLabel>
 
                     <FloatLabel variant="on">
-                        <InputText
+                        <DatePicker
                             id="issue_date"
-                            type="date"
+                            showIcon
+                            showClear
+                            fluid
+                            iconDisplay="input"
+                            dateFormat="yy-mm-dd"
                             v-model="filters.issue_date"
-                            class="w-full"
                         />
                         <label for="issue_date">Issue Date</label>
+                    </FloatLabel>
+
+                    <FloatLabel variant="on">
+                        <DatePicker
+                            id="due_date"
+                            showIcon
+                            showClear
+                            fluid
+                            iconDisplay="input"
+                            dateFormat="yy-mm-dd"
+                            v-model="filters.due_date"
+                        />
+                        <label for="due_date">Due Date</label>
+                    </FloatLabel>
+
+                    <FloatLabel variant="on">
+                        <DatePicker
+                            id="paid_date"
+                            showIcon
+                            showClear
+                            fluid
+                            iconDisplay="input"
+                            dateFormat="yy-mm-dd"
+                            v-model="filters.paid_date"
+                        />
+                        <label for="paid_date">Paid Date</label>
                     </FloatLabel>
                 </div>
             </template>

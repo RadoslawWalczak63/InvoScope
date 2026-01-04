@@ -39,3 +39,16 @@ export const getQueuedJobSeverity = (status: string) => {
             return 'secondary';
     }
 };
+
+export const toDate = (value?: string | null) =>
+    value ? new Date(value + 'T00:00:00') : null;
+
+export const toDateString = (value?: Date | null) => {
+    if (!value) return null;
+
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+};

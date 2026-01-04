@@ -64,7 +64,7 @@ export interface Invoice {
     status: string;
     currency: string;
     issue_date: string;
-    due_date?: string;
+    due_date: string;
     paid_date?: string;
     buyer_id: number;
     seller_id: number;
