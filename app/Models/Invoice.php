@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Currency;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $issue_date
  * @property InvoiceType $type
  * @property InvoiceStatus $status
+ * @property Currency $currency
  */
 class Invoice extends Model
 {
@@ -27,6 +29,7 @@ class Invoice extends Model
             'issue_date' => 'date',
             'type' => InvoiceType::class,
             'status' => InvoiceStatus::class,
+            'currency' => Currency::class,
         ];
     }
 

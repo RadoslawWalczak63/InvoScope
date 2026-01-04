@@ -8,7 +8,7 @@ import {
     PaginatedResource,
     Resource,
 } from '@/Constants/Interfaces';
-import { InvoiceItemUnit, InvoiceStatus, InvoiceType } from '@/Enum';
+import { Currency, InvoiceItemUnit, InvoiceStatus } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import {
@@ -20,6 +20,7 @@ import {
     FloatLabel,
     InputNumber,
     InputText,
+    Select,
     Tag,
     Textarea,
     useConfirm,
@@ -41,6 +42,7 @@ interface InvoiceForm {
     issue_date: string;
     type: string;
     status: string;
+    currency: string;
     buyer_id: number;
     buyer: Entity;
     seller_id: number;
@@ -53,6 +55,7 @@ const form = useForm<InvoiceForm>({
     issue_date: props.invoice.data.issue_date,
     type: props.invoice.data.type,
     status: props.invoice.data.status,
+    currency: props.invoice.data.currency || 'USD',
     buyer_id: props.invoice.data.buyer_id,
     buyer: props.invoice.data.buyer,
     seller_id: props.invoice.data.seller_id,
@@ -89,6 +92,7 @@ const invoiceTotals = computed(() => {
 const startEditing = () => {
     form.defaults({
         ...props.invoice.data,
+        currency: props.invoice.data.currency || Currency.PLN,
         buyer_id: props.invoice.data.buyer_id,
         seller_id: props.invoice.data.seller_id,
         items: props.invoice.data.items.map((i) => ({ ...i })),
@@ -151,7 +155,9 @@ const removeItem = (index: number) => {
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD',
+        currency: isEditing.value
+            ? form.currency
+            : props.invoice.data.currency || Currency.PLN,
     }).format(value);
 };
 </script>
@@ -274,6 +280,22 @@ const formatCurrency = (value: number) => {
                             </EditableField>
 
                             <EditableField
+                                label="Currency"
+                                :isEditing="isEditing"
+                            >
+                                <template #view
+                                    >{{ invoice.data.currency }}
+                                </template>
+                                <template #input>
+                                    <Select
+                                        v-model="form.currency"
+                                        :options="Object.values(Currency)"
+                                        class="w-full"
+                                    />
+                                </template>
+                            </EditableField>
+
+                            <EditableField
                                 label="Status"
                                 :isEditing="isEditing"
                             >
@@ -291,19 +313,6 @@ const formatCurrency = (value: number) => {
                                     <Select
                                         v-model="form.status"
                                         :options="Object.values(InvoiceStatus)"
-                                        class="w-full"
-                                    />
-                                </template>
-                            </EditableField>
-
-                            <EditableField label="Type" :isEditing="isEditing">
-                                <template #view>
-                                    {{ invoice.data.type }}
-                                </template>
-                                <template #input>
-                                    <Select
-                                        v-model="form.type"
-                                        :options="Object.values(InvoiceType)"
                                         class="w-full"
                                     />
                                 </template>
@@ -336,9 +345,9 @@ const formatCurrency = (value: number) => {
                                             filter
                                             class="mb-2"
                                         />
-                                        <span v-else>
-                                            {{ invoice.data.buyer.name }}
-                                        </span>
+                                        <span v-else>{{
+                                            invoice.data.buyer.name
+                                        }}</span>
                                     </div>
                                     <div class="text-sm text-gray-600">
                                         <div>
@@ -357,14 +366,14 @@ const formatCurrency = (value: number) => {
                                             }},
                                             {{
                                                 isEditing
-                                                    ? form.buyer.country
+                                                    ? form.buyer?.country
                                                     : invoice.data.buyer.country
                                             }}
                                         </div>
                                         <div class="mt-2 text-emerald-600">
                                             {{
                                                 isEditing
-                                                    ? form.buyer.email
+                                                    ? form.buyer?.email
                                                     : invoice.data.buyer.email
                                             }}
                                         </div>
@@ -392,9 +401,9 @@ const formatCurrency = (value: number) => {
                                             filter
                                             class="mb-2"
                                         />
-                                        <span v-else>
-                                            {{ invoice.data.seller.name }}
-                                        </span>
+                                        <span v-else>{{
+                                            invoice.data.seller.name
+                                        }}</span>
                                     </div>
                                     <div class="text-sm text-gray-600">
                                         <div>
@@ -410,19 +419,20 @@ const formatCurrency = (value: number) => {
                                             {{
                                                 isEditing
                                                     ? form.seller?.city
-                                                    : invoice.data.buyer.city
+                                                    : invoice.data.seller.city
                                             }},
                                             {{
                                                 isEditing
-                                                    ? form.seller.country
-                                                    : invoice.data.buyer.country
+                                                    ? form.seller?.country
+                                                    : invoice.data.seller
+                                                          .country
                                             }}
                                         </div>
                                         <div class="mt-2 text-emerald-600">
                                             {{
                                                 isEditing
-                                                    ? form.seller.email
-                                                    : invoice.data.buyer.email
+                                                    ? form.seller?.email
+                                                    : invoice.data.seller.email
                                             }}
                                         </div>
                                     </div>
@@ -475,7 +485,6 @@ const formatCurrency = (value: number) => {
                                         />
                                         <label for="item-name">Name</label>
                                     </FloatLabel>
-
                                     <FloatLabel variant="on">
                                         <Textarea
                                             v-model="slotProps.data.description"
@@ -488,7 +497,6 @@ const formatCurrency = (value: number) => {
                                             >Description</label
                                         >
                                     </FloatLabel>
-
                                     <FloatLabel variant="on">
                                         <InputText
                                             v-model="slotProps.data.sku"
@@ -518,7 +526,6 @@ const formatCurrency = (value: number) => {
                                         inputClass="w-16 text-center"
                                         class="w-full"
                                     />
-
                                     <FloatLabel variant="on" class="mt-4">
                                         <Select
                                             v-model="slotProps.data.unit"
@@ -543,14 +550,14 @@ const formatCurrency = (value: number) => {
                                     v-else
                                     v-model="slotProps.data.price"
                                     mode="currency"
-                                    currency="USD"
+                                    :currency="form.currency"
                                     locale="en-US"
                                     class="w-full"
                                 />
                             </template>
                         </Column>
 
-                        <Column header="Tax Amount" style="width: 12%">
+                        <Column header="Tax" style="width: 12%">
                             <template #body="slotProps">
                                 <span v-if="!isEditing">{{
                                     formatCurrency(slotProps.data.tax_amount)
@@ -559,7 +566,7 @@ const formatCurrency = (value: number) => {
                                     v-else
                                     v-model="slotProps.data.tax_amount"
                                     mode="currency"
-                                    currency="USD"
+                                    :currency="form.currency"
                                     locale="en-US"
                                     class="w-full"
                                 />

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Currency;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Models\Entity;
@@ -16,6 +17,7 @@ class InvoiceFactory extends Factory
             'user_id' => User::factory(),
             'number' => 'INV-'.$this->faker->unique()->numerify('#####'),
             'type' => $this->faker->randomElement(InvoiceType::cases()),
+            'currency' => $this->faker->randomElement(Currency::cases()),
             'status' => $this->faker->randomElement(InvoiceStatus::cases()),
             'buyer_id' => Entity::factory(),
             'seller_id' => Entity::factory(),

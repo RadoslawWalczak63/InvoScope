@@ -47,12 +47,14 @@ export interface InvoiceItem {
     id?: number;
     name: string;
     description?: string;
+    sku?: string;
     quantity: number;
     price: number;
     tax_amount: number;
     discount: number;
     unit: string;
     unit_abbreviation?: string;
+    net_total?: number;
 }
 
 export interface Invoice {
@@ -60,6 +62,7 @@ export interface Invoice {
     number: string;
     type: string;
     status: string;
+    currency: string;
     issue_date: string;
     due_date?: string;
     buyer_id: number;
