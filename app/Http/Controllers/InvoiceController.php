@@ -106,6 +106,7 @@ class InvoiceController extends Controller
         ]);
 
         $status = $request->input('status');
+
         if ($request->filled('paid_date')) {
             $status = InvoiceStatus::PAID;
         }

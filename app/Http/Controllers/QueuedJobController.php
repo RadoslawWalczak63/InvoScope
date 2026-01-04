@@ -6,6 +6,7 @@ use App\Http\Resources\QueuedJobResource;
 use App\Models\QueuedJob;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -18,8 +19,12 @@ class QueuedJobController extends Controller
         $queuedJobs = QueryBuilder::for(QueuedJob::class)
             ->allowedFilters([
                 'name',
-                AllowedFilter::partial('job'),
                 AllowedFilter::exact('status'),
+                AllowedFilter::callback('job', function ($query, $value) {
+                    $query
+                        ->where('job', 'like', "%$value%")
+                        ->orWhere('job', 'like', Str::camel("%$value%"));
+                }),
             ])
             ->allowedSorts([
                 'job',

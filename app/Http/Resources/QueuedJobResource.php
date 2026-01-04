@@ -27,12 +27,11 @@ class QueuedJobResource extends JsonResource
             'arguments' => $this->arguments,
             'result' => $this->result,
             'status' => $this->status,
-            'started_at' => $this->started_at?->toDateTimeString(),
-            'finished_at' => $this->finished_at?->toDateTimeString(),
+            'started_at' => $this->started_at->toDateTimeString(),
+            'finished_at' => $this->finished_at->toDateTimeString(),
             'created_at' => $this->created_at->toDateTimeString(),
             'updated_at' => $this->updated_at->toDateTimeString(),
             'console_output' => $this->console_output,
-            'queue' => $this->queue,
         ];
     }
 }

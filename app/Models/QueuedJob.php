@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Str;
 
 /**
  * @mixin Builder
@@ -63,7 +64,7 @@ class QueuedJob extends Model
     protected function jobDisplayName(): Attribute
     {
         return Attribute::get(
-            fn () => class_basename($this->job)
+            fn () => Str::headline(class_basename($this->job))
         );
     }
 

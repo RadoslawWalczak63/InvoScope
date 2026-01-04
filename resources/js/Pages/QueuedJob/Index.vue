@@ -127,7 +127,7 @@ const {
                     </template>
 
                     <Column
-                        field="job"
+                        field="job_display_name"
                         header="Job"
                         sortable
                         class="font-medium"

@@ -10,11 +10,11 @@ defineProps<{
 
 const topCardProperties = [
     'id',
-    'job',
-    'queue',
-    'attempts',
+    'job_display_name',
     'status',
     'created_at',
+    'started_at',
+    'finished_at',
 ];
 </script>
 
@@ -28,78 +28,75 @@ const topCardProperties = [
             </h2>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                <Card>
-                    <template #title>Job Information</template>
-                    <template #content>
-                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <div
-                                class="grid grid-cols-12 gap-2 border-b border-gray-100 pb-2"
-                                v-for="(property, key) in topCardProperties"
-                                :key="`top-card-property-${key}`"
-                            >
-                                <div
-                                    class="col-span-4 font-bold capitalize text-gray-600"
-                                >
-                                    {{ property.replace('_', ' ') }}
-                                </div>
-                                <div class="col-span-8 break-all text-gray-900">
-                                    {{ queuedJob.data[property] }}
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </Card>
-
-                <Card v-if="queuedJob.data.arguments">
-                    <template #title>Arguments</template>
-                    <template #content>
-                        <div class="flex flex-col gap-2">
-                            <div
-                                class="grid grid-cols-12 gap-4 border-b border-gray-100 py-2 last:border-0"
-                                v-for="(argument, key) in queuedJob.data
-                                    .arguments"
-                                :key="`queued-job-arg-${key}`"
-                            >
-                                <div
-                                    class="col-span-12 font-mono text-sm text-blue-600 md:col-span-3"
-                                >
-                                    {{ key }}
-                                </div>
-                                <div class="col-span-12 md:col-span-9">
-                                    <span
-                                        v-if="typeof argument === 'object'"
-                                        class="font-mono text-xs"
-                                    >
-                                        {{ JSON.stringify(argument) }}
-                                    </span>
-                                    <span v-else>
-                                        {{ argument }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </Card>
-
-                <Card>
-                    <template #title>Console</template>
-                    <template #content>
+        <div class="space-y-6">
+            <Card>
+                <template #title>Job Information</template>
+                <template #content>
+                    <div class="mt-4 grid grid-cols-1 gap-6">
                         <div
-                            class="overflow-x-auto rounded-md bg-gray-900 p-4 shadow-inner"
+                            class="grid grid-cols-12 gap-2 border-b border-gray-100 pb-2"
+                            v-for="(property, key) in topCardProperties"
+                            :key="`top-card-property-${key}`"
                         >
-                            <pre
-                                class="whitespace-pre-wrap font-mono text-sm text-green-400"
-                                >{{
-                                    queuedJob.data.console_output ||
-                                    'No output logs available.'
-                                }}</pre
+                            <div
+                                class="col-span-4 font-bold capitalize text-gray-600"
                             >
+                                {{ property.replaceAll('_', ' ') }}
+                            </div>
+                            <div class="col-span-8 break-all text-gray-900">
+                                {{ queuedJob.data[property] }}
+                            </div>
                         </div>
-                    </template>
-                </Card>
-            </div>
+                    </div>
+                </template>
+            </Card>
+
+            <Card v-if="queuedJob.data.arguments">
+                <template #title>Arguments</template>
+                <template #content>
+                    <div class="flex flex-col gap-2">
+                        <div
+                            class="grid grid-cols-12 gap-4 border-b border-gray-100 py-2 last:border-0"
+                            v-for="(argument, key) in queuedJob.data.arguments"
+                            :key="`queued-job-arg-${key}`"
+                        >
+                            <div
+                                class="col-span-12 font-mono text-sm text-blue-600 md:col-span-3"
+                            >
+                                {{ key }}
+                            </div>
+                            <div class="col-span-12 md:col-span-9">
+                                <span
+                                    v-if="typeof argument === 'object'"
+                                    class="font-mono text-xs"
+                                >
+                                    {{ JSON.stringify(argument) }}
+                                </span>
+                                <span v-else>
+                                    {{ argument }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </Card>
+
+            <Card>
+                <template #title>Console</template>
+                <template #content>
+                    <div
+                        class="overflow-x-auto rounded-md bg-gray-900 p-4 shadow-inner"
+                    >
+                        <pre
+                            class="whitespace-pre-wrap font-mono text-sm text-green-400"
+                            >{{
+                                queuedJob.data.console_output ||
+                                'No output logs available.'
+                            }}</pre
+                        >
+                    </div>
+                </template>
+            </Card>
         </div>
     </AuthenticatedLayout>
 </template>
