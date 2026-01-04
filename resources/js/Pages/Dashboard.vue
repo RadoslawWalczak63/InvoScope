@@ -1,22 +1,24 @@
 <script setup lang="ts">
 import { getInvoiceStatusSeverity } from '@/Constants/Helpers';
+import { Currency, InvoiceType } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
-import Button from 'primevue/button';
+import { Head, router } from '@inertiajs/vue3';
+import { FloatLabel } from 'primevue';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
+import DatePicker from 'primevue/datepicker';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{
     stats: {
         income: number;
         expense: number;
         profit: number;
-        active_clients: number;
+        overdue: number;
     };
     charts: {
         monthly: { labels: string[]; income: number[]; expense: number[] };
@@ -24,15 +26,44 @@ const props = defineProps<{
         status: { labels: string[]; data: number[] };
     };
     recentInvoices: any[];
+    selectedCurrency: string;
+    filters: {
+        startDate: string;
+        endDate: string;
+    };
 }>();
 
-const selectedPeriod = ref('Last 6 Months');
-const periods = ref(['Last 6 Months', 'Year to Date']);
+const dates = ref([
+    new Date(props.filters.startDate),
+    new Date(props.filters.endDate),
+]);
+const form = ref({
+    currency: props.selectedCurrency,
+    dates: dates,
+});
+
+watch(
+    () => [form.value.currency, form.value.dates],
+    ([newCurrency, newDates]) => {
+        if (Array.isArray(newDates) && newDates[0] && newDates[1]) {
+            router.get(
+                route('dashboard'),
+                {
+                    currency: newCurrency,
+                    startDate: newDates[0].toISOString().split('T')[0],
+                    endDate: newDates[1].toISOString().split('T')[0],
+                },
+                { preserveState: true, replace: true },
+            );
+        }
+    },
+    { deep: true },
+);
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD',
+        currency: form.value.currency,
     }).format(value);
 };
 
@@ -129,12 +160,7 @@ const polarOptions = ref({
     plugins: {
         legend: { position: 'bottom', labels: { usePointStyle: true } },
     },
-    scales: {
-        r: {
-            ticks: { display: false },
-            grid: { color: '#F3F4F6' },
-        },
-    },
+    scales: { r: { ticks: { display: false }, grid: { color: '#F3F4F6' } } },
 });
 </script>
 
@@ -145,76 +171,58 @@ const polarOptions = ref({
         <template #header>Dashboard</template>
 
         <div class="space-y-6">
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <Card class="border-l-4 border-emerald-500 shadow-sm">
-                    <template #content>
-                        <div class="flex h-full flex-col justify-between">
-                            <span
-                                class="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400"
-                                >Total Income</span
-                            >
-                            <div
-                                class="text-3xl font-bold text-gray-800 dark:text-white"
-                            >
-                                {{ formatCurrency(props.stats.income) }}
-                            </div>
-                        </div>
-                    </template>
-                </Card>
+            <Card>
+                <template #title>Filters</template>
+                <template #content>
+                    <div class="mt-2 grid grid-cols-2 gap-4">
+                        <FloatLabel variant="on">
+                            <DatePicker
+                                id="period"
+                                v-model="form.dates"
+                                showIcon
+                                showClear
+                                fluid
+                                iconDisplay="input"
+                                dateFormat="yy-mm-dd"
+                                selectionMode="range"
+                                :manualInput="false"
+                                size="small"
+                            />
+                            <label for="period">Date Range</label>
+                        </FloatLabel>
 
-                <Card class="border-l-4 border-red-500 shadow-sm">
-                    <template #content>
-                        <div class="flex h-full flex-col justify-between">
-                            <span
-                                class="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400"
-                                >Total Expenses</span
-                            >
-                            <div
-                                class="text-3xl font-bold text-gray-800 dark:text-white"
-                            >
-                                {{ formatCurrency(props.stats.expense) }}
-                            </div>
-                        </div>
-                    </template>
-                </Card>
+                        <FloatLabel variant="on">
+                            <Select
+                                id="currency"
+                                v-model="form.currency"
+                                :options="Object.values(Currency)"
+                                size="small"
+                                filter
+                                fluid
+                            />
+                            <label for="currency">Currency</label>
+                        </FloatLabel>
+                    </div>
+                </template>
+            </Card>
 
-                <Card class="border-l-4 border-indigo-500 shadow-sm">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card v-for="(val, label) in stats" :key="label">
                     <template #content>
-                        <div class="flex h-full flex-col justify-between">
-                            <span
-                                class="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400"
-                                >Net Profit</span
-                            >
-                            <div
-                                class="text-3xl font-bold text-gray-800 dark:text-white"
-                            >
-                                {{ formatCurrency(props.stats.profit) }}
-                            </div>
-                        </div>
-                    </template>
-                </Card>
-
-                <Card class="border-l-4 border-orange-500 shadow-sm">
-                    <template #content>
-                        <div class="flex h-full flex-col justify-between">
-                            <span
-                                class="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400"
-                                >Active Clients</span
-                            >
-                            <div class="flex items-end justify-between">
-                                <div
-                                    class="text-3xl font-bold text-gray-800 dark:text-white"
-                                >
-                                    {{ props.stats.active_clients }}
-                                </div>
-                                <Tag
-                                    severity="success"
-                                    icon="pi pi-arrow-up"
-                                    value="4 new"
-                                    rounded
-                                ></Tag>
-                            </div>
-                        </div>
+                        <p
+                            class="mb-1 text-xs font-bold uppercase tracking-widest text-gray-400"
+                        >
+                            {{ label }}
+                        </p>
+                        <p
+                            class="text-2xl font-black"
+                            :class="{
+                                'text-orange-500': label === 'overdue',
+                                'text-emerald-500': label === 'profit',
+                            }"
+                        >
+                            {{ formatCurrency(val) }}
+                        </p>
                     </template>
                 </Card>
             </div>
@@ -222,20 +230,7 @@ const polarOptions = ref({
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div class="flex flex-col gap-6 lg:col-span-2">
                     <Card class="shadow-sm">
-                        <template #title>
-                            <div class="mb-4 flex items-center justify-between">
-                                <span
-                                    class="text-lg font-bold text-gray-700 dark:text-gray-300"
-                                    >Financial Performance</span
-                                >
-                                <Select
-                                    v-model="selectedPeriod"
-                                    :options="periods"
-                                    placeholder="Select Range"
-                                    size="small"
-                                />
-                            </div>
-                        </template>
+                        <template #title>Financial Performance</template>
                         <template #content>
                             <div class="h-[350px] w-full">
                                 <Chart
@@ -249,21 +244,7 @@ const polarOptions = ref({
                     </Card>
 
                     <Card class="overflow-hidden shadow-sm">
-                        <template #title>
-                            <div class="mb-2 flex items-center justify-between">
-                                <span
-                                    class="text-lg font-bold text-gray-700 dark:text-gray-300"
-                                    >Recent Transactions</span
-                                >
-                                <Button
-                                    icon="pi pi-ellipsis-h"
-                                    text
-                                    rounded
-                                    aria-label="Menu"
-                                    class="text-gray-400"
-                                />
-                            </div>
-                        </template>
+                        <template #title>Recent Transactions</template>
                         <template #content>
                             <DataTable
                                 :value="props.recentInvoices"
@@ -300,15 +281,19 @@ const polarOptions = ref({
                                 <Column header="Amount" class="text-right">
                                     <template #body="slotProps">
                                         <span
-                                            :class="
-                                                slotProps.data.type === 'income'
-                                                    ? 'text-emerald-600'
-                                                    : 'text-red-600'
-                                            "
+                                            :class="{
+                                                'text-emerald-600':
+                                                    slotProps.data.type ===
+                                                    InvoiceType.INCOME,
+                                                'text-red-600':
+                                                    slotProps.data.type ===
+                                                    InvoiceType.EXPENSE,
+                                            }"
                                             class="text-sm font-bold"
                                         >
                                             {{
-                                                slotProps.data.type === 'income'
+                                                slotProps.data.type ===
+                                                InvoiceType.INCOME
                                                     ? '+'
                                                     : '-'
                                             }}
@@ -332,6 +317,11 @@ const polarOptions = ref({
                                         />
                                     </template>
                                 </Column>
+                                <template #empty>
+                                    <div class="py-6 text-center text-gray-500">
+                                        No recent transactions found.
+                                    </div>
+                                </template>
                             </DataTable>
                         </template>
                     </Card>
@@ -339,12 +329,7 @@ const polarOptions = ref({
 
                 <div class="flex flex-col gap-6">
                     <Card class="shadow-sm">
-                        <template #title>
-                            <span
-                                class="text-sm font-bold uppercase tracking-wider text-gray-500"
-                                >Top Expense Categories</span
-                            >
-                        </template>
+                        <template #title>Top Expense Categories</template>
                         <template #content>
                             <div
                                 class="mt-4 flex h-[250px] w-full justify-center"
@@ -360,12 +345,7 @@ const polarOptions = ref({
                     </Card>
 
                     <Card class="flex-grow shadow-sm">
-                        <template #title>
-                            <span
-                                class="text-sm font-bold uppercase tracking-wider text-gray-500"
-                                >Transaction Volume</span
-                            >
-                        </template>
+                        <template #title>Transaction Volume</template>
                         <template #content>
                             <div
                                 class="mt-4 flex h-[250px] w-full justify-center"
