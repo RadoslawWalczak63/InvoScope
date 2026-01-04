@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\Currency;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -68,12 +69,26 @@ class CopilotService
                             'format' => 'date',
                             'description' => 'YYYY-MM-DD',
                         ],
+                        'due_date' => [
+                            'type' => ['string'],
+                            'format' => 'date',
+                            'description' => 'YYYY-MM-DD',
+                        ],
+                        'paid_date' => [
+                            'type' => ['string', 'null'],
+                            'format' => 'date',
+                            'description' => 'YYYY-MM-DD',
+                        ],
                         'type' => [
                             'type' => 'string',
                             'enum' => ['Income', 'Expense'],
                             'description' => 'Determine if this is an Income (Sales) or Expense (Purchase) invoice.',
                         ],
-
+                        'currency' => [
+                            'type' => 'string',
+                            'description' => 'The currency code (e.g. USD, EUR, GBP) in ISO 4217 format.',
+                            'enum' => array_map(fn ($c) => $c->value, Currency::cases()),
+                        ],
                         'buyer_details' => [
                             'type' => 'object',
                             'properties' => [
@@ -136,7 +151,10 @@ class CopilotService
                     'required' => [
                         'number',
                         'issue_date',
+                        'due_date',
+                        'paid_date',
                         'type',
+                        'currency',
                         'buyer_details',
                         'seller_details',
                         'items',

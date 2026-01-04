@@ -134,6 +134,9 @@ class ProcessInvoiceImport extends Command
         $this->saveInvoiceToDatabase($invoiceData);
     }
 
+    /**
+     * @throws Throwable
+     */
     private function saveInvoiceToDatabase(array $data): void
     {
         DB::transaction(function () use ($data) {
@@ -149,6 +152,9 @@ class ProcessInvoiceImport extends Command
                     'buyer_id' => $buyer->id,
                     'seller_id' => $seller->id,
                     'issue_date' => $data['issue_date'],
+                    'due_date' => $data['due_date'],
+                    'paid_date' => $data['paid_date'] ?? null,
+                    'currency' => $data['currency'],
                     'type' => $data['type'],
                     'status' => $data['status'] ?? 'Draft',
                 ]

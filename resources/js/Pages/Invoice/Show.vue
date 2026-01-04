@@ -40,6 +40,8 @@ interface InvoiceForm {
 
     number: string;
     issue_date: string;
+    due_date: string;
+    paid_date: string | null;
     type: string;
     status: string;
     currency: string;
@@ -53,9 +55,11 @@ interface InvoiceForm {
 const form = useForm<InvoiceForm>({
     number: props.invoice.data.number,
     issue_date: props.invoice.data.issue_date,
+    due_date: props.invoice.data.due_date,
+    paid_date: props.invoice.data.paid_date,
     type: props.invoice.data.type,
     status: props.invoice.data.status,
-    currency: props.invoice.data.currency || 'USD',
+    currency: props.invoice.data.currency,
     buyer_id: props.invoice.data.buyer_id,
     buyer: props.invoice.data.buyer,
     seller_id: props.invoice.data.seller_id,
@@ -92,7 +96,7 @@ const invoiceTotals = computed(() => {
 const startEditing = () => {
     form.defaults({
         ...props.invoice.data,
-        currency: props.invoice.data.currency || Currency.PLN,
+        currency: props.invoice.data.currency,
         buyer_id: props.invoice.data.buyer_id,
         seller_id: props.invoice.data.seller_id,
         items: props.invoice.data.items.map((i) => ({ ...i })),
@@ -155,9 +159,7 @@ const removeItem = (index: number) => {
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: isEditing.value
-            ? form.currency
-            : props.invoice.data.currency || Currency.PLN,
+        currency: isEditing.value ? form.currency : props.invoice.data.currency,
     }).format(value);
 };
 </script>
@@ -243,11 +245,11 @@ const formatCurrency = (value: number) => {
         </template>
 
         <div class="space-y-6">
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <Card class="lg:col-span-1">
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <Card>
                     <template #title>Details</template>
                     <template #content>
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <EditableField
                                 label="Number"
                                 :isEditing="isEditing"
@@ -274,6 +276,38 @@ const formatCurrency = (value: number) => {
                                     <InputText
                                         type="date"
                                         v-model="form.issue_date"
+                                        class="w-full"
+                                    />
+                                </template>
+                            </EditableField>
+
+                            <EditableField
+                                label="Due Date"
+                                :isEditing="isEditing"
+                            >
+                                <template #view
+                                    >{{ invoice.data.due_date }}
+                                </template>
+                                <template #input>
+                                    <InputText
+                                        type="date"
+                                        v-model="form.due_date"
+                                        class="w-full"
+                                    />
+                                </template>
+                            </EditableField>
+
+                            <EditableField
+                                label="Paid Date"
+                                :isEditing="isEditing"
+                            >
+                                <template #view
+                                    >{{ invoice.data.paid_date || '—' }}
+                                </template>
+                                <template #input>
+                                    <InputText
+                                        type="date"
+                                        v-model="form.paid_date"
                                         class="w-full"
                                     />
                                 </template>
@@ -321,7 +355,7 @@ const formatCurrency = (value: number) => {
                     </template>
                 </Card>
 
-                <Card class="lg:col-span-2">
+                <Card>
                     <template #title>Parties</template>
                     <template #content>
                         <div class="grid grid-cols-1 gap-8 md:grid-cols-2">

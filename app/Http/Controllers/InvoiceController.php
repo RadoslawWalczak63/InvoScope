@@ -9,8 +9,6 @@ use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
 use App\Services\CopilotService;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Enum;
@@ -21,10 +19,6 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class InvoiceController extends Controller
 {
-    /**
-     * @throws RequestException
-     * @throws ConnectionException
-     */
     public function index(Request $request, CopilotService $copilotService): Response
     {
         $request->validate([
@@ -33,7 +27,7 @@ class InvoiceController extends Controller
 
         $invoices = QueryBuilder::for(Invoice::class)
             ->defaultSort('-issue_date')
-            ->allowedSorts(['number', 'type', 'issue_date', 'created_at'])
+            ->allowedSorts(['number', 'type', 'issue_date', 'due_date', 'created_at'])
             ->allowedFilters([
                 AllowedFilter::partial('number'),
                 AllowedFilter::exact('type'),
@@ -91,6 +85,8 @@ class InvoiceController extends Controller
         $request->validate([
             'number' => 'required|string|max:255',
             'issue_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
+            'paid_date' => 'nullable|date',
             'type' => ['required', new Enum(InvoiceType::class)],
             'status' => ['required', new Enum(InvoiceStatus::class)],
             'buyer_id' => 'required|exists:entities,id',
@@ -107,11 +103,18 @@ class InvoiceController extends Controller
             'items.*.discount' => 'required|numeric|min:0',
         ]);
 
+        $status = $request->input('status');
+        if ($request->filled('paid_date')) {
+            $status = InvoiceStatus::PAID;
+        }
+
         $invoice->update([
             'number' => $request->input('number'),
             'issue_date' => $request->input('issue_date'),
+            'due_date' => $request->input('due_date'),
+            'paid_date' => $request->input('paid_date'),
             'type' => $request->input('type'),
-            'status' => $request->input('status'),
+            'status' => $status,
             'buyer_id' => $request->input('buyer_id'),
             'seller_id' => $request->input('seller_id'),
         ]);
@@ -146,6 +149,7 @@ class InvoiceController extends Controller
         $validated = $request->validate([
             'number' => 'required|string|max:255',
             'issue_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
             'type' => ['required', new Enum(InvoiceType::class)],
             'buyer_id' => 'required|exists:entities,id',
             'seller_id' => 'required|exists:entities,id',

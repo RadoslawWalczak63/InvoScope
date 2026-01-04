@@ -13,6 +13,8 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property Carbon $issue_date
+ * @property Carbon $due_date
+ * @property Carbon|null $paid_date
  * @property InvoiceType $type
  * @property InvoiceStatus $status
  * @property Currency $currency
@@ -27,6 +29,8 @@ class Invoice extends Model
     {
         return [
             'issue_date' => 'date',
+            'due_date' => 'date',
+            'paid_date' => 'date',
             'type' => InvoiceType::class,
             'status' => InvoiceStatus::class,
             'currency' => Currency::class,
