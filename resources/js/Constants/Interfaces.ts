@@ -68,6 +68,8 @@ export interface Invoice {
     paid_date?: string;
     buyer_id: number;
     seller_id: number;
+    bank_account_number: string;
+    file_url?: string;
     buyer: Entity;
     seller: Entity;
     items: InvoiceItem[];

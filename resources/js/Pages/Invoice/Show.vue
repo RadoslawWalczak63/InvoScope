@@ -14,6 +14,7 @@ import {
 } from '@/Constants/Interfaces';
 import { Currency, InvoiceItemUnit, InvoiceStatus } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import InvoiceDownloadDialog from '@/Pages/Invoice/Partials/InvoiceDownloadDialog.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import {
     Button,
@@ -21,6 +22,7 @@ import {
     Column,
     ConfirmDialog,
     DataTable,
+    DatePicker,
     FloatLabel,
     InputNumber,
     InputText,
@@ -38,6 +40,7 @@ const props = defineProps<{
 
 const confirm = useConfirm();
 const isEditing = ref(false);
+const isDownloadModalOpen = ref(false);
 
 interface InvoiceForm {
     [key: string]: any;
@@ -68,6 +71,7 @@ const form = useForm<InvoiceForm>({
     buyer: props.invoice.data.buyer,
     seller_id: props.invoice.data.seller_id,
     seller: props.invoice.data.seller,
+    bank_account_number: props.invoice.data.bank_account_number,
     items: props.invoice.data.items.map((item) => ({
         ...item,
         quantity: Number(item.quantity),
@@ -157,6 +161,10 @@ const deleteInvoice = () => {
     });
 };
 
+const openDownloadModal = () => {
+    isDownloadModalOpen.value = true;
+};
+
 const addItem = () => {
     form.items.push({
         name: 'New Item',
@@ -236,6 +244,14 @@ const formatCurrency = (value: number) => {
                             severity="danger"
                             text
                             @click="deleteInvoice"
+                        />
+                        <Button
+                            size="small"
+                            label="Download"
+                            icon="pi pi-download"
+                            severity="success"
+                            text
+                            @click="openDownloadModal"
                         />
                     </template>
 
@@ -379,6 +395,24 @@ const formatCurrency = (value: number) => {
                                     />
                                 </template>
                             </EditableField>
+
+                            <div class="lg:col-span-2">
+                                <EditableField
+                                    label="Bank Account Number"
+                                    :isEditing="isEditing"
+                                >
+                                    <template #view>
+                                        {{ invoice.data.bank_account_number }}
+                                    </template>
+
+                                    <template #input>
+                                        <InputText
+                                            v-model="form.bank_account_number"
+                                            class="w-full"
+                                        />
+                                    </template>
+                                </EditableField>
+                            </div>
                         </div>
                     </template>
                 </Card>
@@ -696,41 +730,45 @@ const formatCurrency = (value: number) => {
                                 class="flex justify-between text-sm text-gray-600"
                             >
                                 <span>Subtotal</span>
-                                <span>{{
-                                    formatCurrency(invoiceTotals.subtotal)
-                                }}</span>
+                                <span>
+                                    {{ formatCurrency(invoiceTotals.subtotal) }}
+                                </span>
                             </div>
                             <div
                                 class="flex justify-between text-sm text-gray-600"
                             >
                                 <span>Tax</span>
-                                <span>{{
-                                    formatCurrency(invoiceTotals.tax)
-                                }}</span>
+                                <span>
+                                    {{ formatCurrency(invoiceTotals.tax) }}
+                                </span>
                             </div>
                             <div
                                 class="flex justify-between border-b border-gray-200 pb-2 text-sm text-gray-600"
                             >
                                 <span>Discount</span>
-                                <span
-                                    >-
-                                    {{
-                                        formatCurrency(invoiceTotals.discount)
-                                    }}</span
-                                >
+                                <span>
+                                    -
+                                    {{ formatCurrency(invoiceTotals.discount) }}
+                                </span>
                             </div>
                             <div
                                 class="flex justify-between text-xl font-bold text-gray-900 dark:text-white"
                             >
                                 <span>Total</span>
-                                <span>{{
-                                    formatCurrency(invoiceTotals.total)
-                                }}</span>
+                                <span>
+                                    {{ formatCurrency(invoiceTotals.total) }}
+                                </span>
                             </div>
                         </div>
                     </div>
                 </template>
             </Card>
         </div>
+
+        <InvoiceDownloadDialog
+            :open="isDownloadModalOpen"
+            :invoice="invoice.data"
+            @update:open="(newVal) => (isDownloadModalOpen = newVal)"
+        />
     </AuthenticatedLayout>
 </template>

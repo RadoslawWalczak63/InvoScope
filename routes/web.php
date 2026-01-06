@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DownloadInvoiceController;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PreviewInvoiceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QueuedJobController;
 use App\Http\Controllers\UploadInvoiceController;
@@ -17,6 +19,8 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('entities', EntityController::class);
     Route::post('invoices/upload', UploadInvoiceController::class)->name('invoices.upload');
+    Route::get('invoices/{invoice}/preview', PreviewInvoiceController::class)->name('invoices.preview');
+    Route::get('invoices/{invoice}/download', DownloadInvoiceController::class)->name('invoices.download');
     Route::resource('invoices', InvoiceController::class);
     Route::resource('queued-jobs', QueuedJobController::class);
 });

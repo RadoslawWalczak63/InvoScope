@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\EntityType;
+use App\Enums\InvoiceStatus;
 use App\Models\Entity;
 use App\Models\Invoice;
 use App\Models\QueuedJob;
@@ -153,10 +154,12 @@ class ProcessInvoiceImport extends Command
                     'seller_id' => $seller->id,
                     'issue_date' => $data['issue_date'],
                     'due_date' => $data['due_date'],
-                    'paid_date' => $data['paid_date'] ?? null,
+                    'paid_date' => $data['paid_date'],
                     'currency' => $data['currency'],
                     'type' => $data['type'],
-                    'status' => $data['status'] ?? 'Draft',
+                    'status' => $data['status'] ?? InvoiceStatus::DRAFT,
+                    'file_path' => $this->queuedJob->arguments->file_path,
+                    'bank_account_number' => $data['bank_account_number'],
                 ]
             );
 

@@ -203,3 +203,13 @@ export const InvoiceType = {
     "EXPENSE": "Expense"
 };
 
+export const InvoiceTemplate = {
+    "STANDARD": "Standard",
+    "MODERN": "Modern",
+    "MINIMALIST": "Minimalist",
+    "CLEAN": "Clean",
+    "PROFESSIONAL": "Professional",
+    "ARCHITECTURAL": "Architectural",
+    "HORIZONTAL": "Horizontal"
+};
+

@@ -89,6 +89,10 @@ class CopilotService
                             'description' => 'The currency code (e.g. USD, EUR, GBP) in ISO 4217 format.',
                             'enum' => array_map(fn ($c) => $c->value, Currency::cases()),
                         ],
+                        'bank_account_number' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'The bank account number associated with the invoice, if available.',
+                        ],
                         'buyer_details' => [
                             'type' => 'object',
                             'properties' => [
@@ -158,6 +162,7 @@ class CopilotService
                         'buyer_details',
                         'seller_details',
                         'items',
+                        'bank_account_number',
                     ],
                     'additionalProperties' => false,
                 ],

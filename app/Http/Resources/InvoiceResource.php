@@ -27,6 +27,10 @@ class InvoiceResource extends JsonResource
             'paid_date' => $this->paid_date?->toDateString(),
             'buyer_id' => $this->buyer_id,
             'seller_id' => $this->seller_id,
+            'bank_account_number' => $this->bank_account_number,
+            'file_url' => $this->whenHas('file_path', function () {
+                return route('invoices.download', ['invoice' => $this->id]);
+            }),
             'buyer' => new EntityResource($this->whenLoaded('buyer')),
             'seller' => new EntityResource($this->whenLoaded('seller')),
             'items' => InvoiceItemResource::collection($this->whenLoaded('items')),
