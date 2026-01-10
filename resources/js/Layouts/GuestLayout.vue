@@ -18,5 +18,7 @@ import { Link } from '@inertiajs/vue3';
         >
             <slot />
         </div>
+
+        <slot name="footer" />
     </div>
 </template>

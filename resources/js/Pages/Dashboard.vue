@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { getInvoiceStatusSeverity } from '@/Constants/Helpers';
-import { InvoiceType } from '@/Enum';
+import { InvoiceStatus, InvoiceType } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { FloatLabel } from 'primevue';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import Column from 'primevue/column';
@@ -13,38 +11,54 @@ import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import { computed, ref, watch } from 'vue';
 
-const props = defineProps<{
-    stats: {
+interface DashboardProps {
+    kpis: {
         income: number;
         expense: number;
         profit: number;
-        overdue: number;
     };
-    charts: {
-        monthly: { labels: string[]; income: number[]; expense: number[] };
-        expenses: { labels: string[]; data: number[] };
-        status: { labels: string[]; data: number[] };
+    chart: {
+        labels: string[];
+        income: number[];
+        expense: number[];
+        net_cumulative: number[];
+    };
+    monthlyChart: {
+        labels: string[];
+        income: number[];
+        expense: number[];
+    };
+    expenseBreakdown: {
+        labels: string[];
+        data: number[];
     };
     recentInvoices: any[];
-    selectedCurrency: string;
-    currencies: string[];
     filters: {
+        currency: string;
+        currencies: string[];
         startDate: string;
         endDate: string;
     };
-}>();
+}
+
+const props = defineProps<DashboardProps>();
 
 const dates = ref([
     new Date(props.filters.startDate),
     new Date(props.filters.endDate),
 ]);
-const form = ref({
-    currency: props.selectedCurrency,
-    dates: dates,
-});
+const selectedCurrency = ref(props.filters.currency);
+
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: props.filters.currency,
+        maximumFractionDigits: 0,
+    }).format(value);
+};
 
 watch(
-    () => [form.value.currency, form.value.dates],
+    () => [selectedCurrency.value, dates.value],
     ([newCurrency, newDates]) => {
         if (Array.isArray(newDates) && newDates[0] && newDates[1]) {
             router.get(
@@ -61,61 +75,96 @@ watch(
     { deep: true },
 );
 
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: form.value.currency,
-    }).format(value);
-};
-
-const barData = computed(() => ({
-    labels: props.charts.monthly.labels,
+const mainChartData = computed(() => ({
+    labels: props.chart.labels,
     datasets: [
         {
-            label: 'Income',
-            backgroundColor: '#10B981',
-            data: props.charts.monthly.income,
-            borderRadius: 6,
-            barPercentage: 0.6,
-            categoryPercentage: 0.8,
+            label: 'Net Balance',
+            data: props.chart.net_cumulative,
+            fill: true,
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            yAxisID: 'y',
         },
         {
-            label: 'Expense',
-            backgroundColor: '#EF4444',
-            data: props.charts.monthly.expense,
-            borderRadius: 6,
-            barPercentage: 0.6,
-            categoryPercentage: 0.8,
+            type: 'bar',
+            label: 'Daily Expense',
+            data: props.chart.expense,
+            backgroundColor: '#F87171',
+            borderRadius: 4,
+            yAxisID: 'y1',
         },
     ],
 }));
 
-const barOptions = ref({
+const mainChartOptions = ref({
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+        mode: 'index',
+        intersect: false,
+    },
     plugins: {
-        legend: {
-            position: 'top',
-            align: 'end',
-            labels: { usePointStyle: true, boxWidth: 8 },
-        },
-        tooltip: { mode: 'index', intersect: false },
+        legend: { position: 'top', align: 'end' },
     },
     scales: {
-        x: { grid: { display: false }, ticks: { color: '#6B7280' } },
+        x: {
+            grid: { display: false },
+            ticks: { maxTicksLimit: 10 },
+        },
         y: {
-            grid: { color: '#F3F4F6', borderDash: [5, 5] },
-            border: { display: false },
-            ticks: { color: '#6B7280' },
+            type: 'linear',
+            display: true,
+            position: 'left',
+            grid: { borderDash: [4, 4], color: '#f3f4f6' },
+            title: { display: true, text: 'Cumulative' },
+        },
+        y1: {
+            type: 'linear',
+            display: false,
+            position: 'right',
+            grid: { display: false },
+            min: 0,
         },
     },
 });
 
-const doughnutData = computed(() => ({
-    labels: props.charts.expenses.labels,
+const monthlyBarData = computed(() => ({
+    labels: props.monthlyChart.labels,
     datasets: [
         {
-            data: props.charts.expenses.data,
+            label: 'Income',
+            backgroundColor: '#10B981',
+            data: props.monthlyChart.income,
+            borderRadius: 4,
+        },
+        {
+            label: 'Expense',
+            backgroundColor: '#EF4444',
+            data: props.monthlyChart.expense,
+            borderRadius: 4,
+        },
+    ],
+}));
+
+const monthlyBarOptions = ref({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { position: 'bottom' },
+    },
+    scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: '#f3f4f6' } },
+    },
+});
+
+const expenseDonutData = computed(() => ({
+    labels: props.expenseBreakdown.labels,
+    datasets: [
+        {
+            data: props.expenseBreakdown.data,
             backgroundColor: [
                 '#3B82F6',
                 '#F59E0B',
@@ -123,165 +172,200 @@ const doughnutData = computed(() => ({
                 '#6366F1',
                 '#EC4899',
             ],
-            borderWidth: 0,
-            hoverOffset: 10,
+            hoverOffset: 4,
         },
     ],
 }));
 
-const doughnutOptions = ref({
+const expenseDonutOptions = ref({
     responsive: true,
     maintainAspectRatio: false,
-    cutout: '75%',
     plugins: {
         legend: {
-            position: 'bottom',
-            labels: { usePointStyle: true, padding: 20 },
+            position: 'right',
+            labels: { boxWidth: 12, usePointStyle: true },
         },
     },
-});
-
-const polarData = computed(() => ({
-    labels: props.charts.status.labels,
-    datasets: [
-        {
-            data: props.charts.status.data,
-            backgroundColor: [
-                'rgba(16, 185, 129, 0.7)',
-                'rgba(239, 68, 68, 0.7)',
-            ],
-            borderWidth: 0,
-        },
-    ],
-}));
-
-const polarOptions = ref({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-        legend: { position: 'bottom', labels: { usePointStyle: true } },
-    },
-    scales: { r: { ticks: { display: false }, grid: { color: '#F3F4F6' } } },
 });
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Financial Overview" />
 
     <AuthenticatedLayout>
-        <template #header>Dashboard</template>
+        <template #header>
+            <div
+                class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+            >
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    Financial Overview
+                </h2>
 
-        <div class="space-y-6">
-            <Card>
-                <template #title>Filters</template>
-                <template #content>
-                    <div class="mt-2 grid grid-cols-2 gap-4">
-                        <FloatLabel variant="on">
-                            <DatePicker
-                                id="period"
-                                v-model="form.dates"
-                                showIcon
-                                showClear
-                                fluid
-                                iconDisplay="input"
-                                dateFormat="yy-mm-dd"
-                                selectionMode="range"
-                                :manualInput="false"
-                                size="small"
-                            />
-                            <label for="period">Date Range</label>
-                        </FloatLabel>
-
-                        <FloatLabel variant="on">
-                            <Select
-                                id="currency"
-                                v-model="form.currency"
-                                :options="currencies"
-                                size="small"
-                                filter
-                                fluid
-                            />
-                            <label for="currency">Currency</label>
-                        </FloatLabel>
+                <div class="flex flex-col items-center gap-3 sm:flex-row">
+                    <div class="w-full sm:w-40">
+                        <Select
+                            v-model="selectedCurrency"
+                            :options="props.filters.currencies"
+                            placeholder="Currency"
+                            class="w-full"
+                        />
                     </div>
-                </template>
-            </Card>
+                    <div class="w-full sm:w-64">
+                        <DatePicker
+                            v-model="dates"
+                            selectionMode="range"
+                            dateFormat="yy-mm-dd"
+                            placeholder="Select Range"
+                            showIcon
+                            class="w-full"
+                            size="small"
+                            :manualInput="false"
+                        />
+                    </div>
+                </div>
+            </div>
+        </template>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card v-for="(val, label) in stats" :key="label">
+        <div class="space-y-6 py-6">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <Card
+                    class="relative overflow-hidden border-l-4 border-emerald-500 shadow-sm"
+                >
                     <template #content>
-                        <p
-                            class="mb-1 text-xs font-bold uppercase tracking-widest text-gray-400"
+                        <div
+                            class="relative z-10 flex items-start justify-between"
                         >
-                            {{ label }}
-                        </p>
-                        <p
-                            class="text-2xl font-black"
-                            :class="{
-                                'text-orange-500':
-                                    label === 'overdue' && val > 0,
-                                'text-emerald-500':
-                                    label === 'profit' && val >= 0,
-                                'text-red-500': label === 'profit' && val < 0,
-                            }"
-                        >
-                            {{ formatCurrency(val) }}
-                        </p>
+                            <div>
+                                <p
+                                    class="text-sm font-medium uppercase tracking-wider text-gray-500"
+                                >
+                                    Net Profit
+                                </p>
+                                <h3
+                                    class="mt-2 text-3xl font-bold text-gray-800"
+                                >
+                                    {{ formatCurrency(props.kpis.profit) }}
+                                </h3>
+                            </div>
+                            <div class="rounded-lg bg-emerald-50 p-2">
+                                <i
+                                    class="pi pi-wallet text-xl text-emerald-600"
+                                ></i>
+                            </div>
+                        </div>
+                    </template>
+                </Card>
+
+                <Card class="border-l-4 border-blue-500 shadow-sm">
+                    <template #content>
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p
+                                    class="text-sm font-medium uppercase tracking-wider text-gray-500"
+                                >
+                                    Total Income
+                                </p>
+                                <h3
+                                    class="mt-2 text-3xl font-bold text-gray-800"
+                                >
+                                    {{ formatCurrency(props.kpis.income) }}
+                                </h3>
+                            </div>
+                            <div class="rounded-lg bg-blue-50 p-2">
+                                <i
+                                    class="pi pi-arrow-up-right text-xl text-blue-600"
+                                ></i>
+                            </div>
+                        </div>
+                    </template>
+                </Card>
+
+                <Card class="border-l-4 border-orange-500 shadow-sm">
+                    <template #content>
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p
+                                    class="text-sm font-medium uppercase tracking-wider text-gray-500"
+                                >
+                                    Total Expenses
+                                </p>
+                                <h3
+                                    class="mt-2 text-3xl font-bold text-gray-800"
+                                >
+                                    {{ formatCurrency(props.kpis.expense) }}
+                                </h3>
+                            </div>
+                            <div class="rounded-lg bg-orange-50 p-2">
+                                <i
+                                    class="pi pi-arrow-down-right text-xl text-orange-600"
+                                ></i>
+                            </div>
+                        </div>
                     </template>
                 </Card>
             </div>
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <div class="flex flex-col gap-6 lg:col-span-2">
-                    <Card class="shadow-sm">
-                        <template #title>Financial Performance</template>
-                        <template #content>
-                            <div class="h-[350px] w-full">
-                                <Chart
-                                    type="bar"
-                                    :data="barData"
-                                    :options="barOptions"
-                                    class="h-full w-full"
-                                />
-                            </div>
-                        </template>
-                    </Card>
+                <Card class="shadow-sm lg:col-span-2">
+                    <template #title>
+                        <div class="flex items-center justify-between">
+                            <span class="text-lg font-bold text-gray-700">
+                                Financial Trend
+                            </span>
+                            <Tag
+                                value="Net Cumulative"
+                                severity="info"
+                                class="text-xs"
+                            />
+                        </div>
+                    </template>
+                    <template #content>
+                        <div class="mt-4 h-[350px] w-full">
+                            <Chart
+                                type="line"
+                                :data="mainChartData"
+                                :options="mainChartOptions"
+                                class="h-full w-full"
+                            />
+                        </div>
+                    </template>
+                </Card>
 
-                    <Card class="overflow-hidden shadow-sm">
-                        <template #title>Recent Transactions</template>
-                        <template #content>
+                <Card class="flex flex-col shadow-sm">
+                    <template #title>
+                        <span class="text-lg font-bold text-gray-700">
+                            Recent Activity
+                        </span>
+                    </template>
+                    <template #content>
+                        <div class="-mx-4">
                             <DataTable
                                 :value="props.recentInvoices"
-                                :rows="5"
+                                :rows="6"
                                 responsiveLayout="scroll"
-                                stripedRows
-                                tableStyle="min-width: 50rem"
+                                size="small"
+                                class="text-sm"
                             >
-                                <Column field="number" header="ID">
-                                    <template #body="slotProps">
-                                        <span
-                                            class="font-mono text-xs text-gray-500"
-                                            >#{{ slotProps.data.number }}</span
-                                        >
-                                    </template>
-                                </Column>
-                                <Column
-                                    field="client_name"
-                                    header="Counterparty"
-                                >
+                                <Column field="client_name" header="Party">
                                     <template #body="slotProps">
                                         <div class="flex flex-col">
-                                            <span class="text-sm font-medium">{{
-                                                slotProps.data.client_name
-                                            }}</span>
                                             <span
-                                                class="text-xs capitalize text-gray-400"
-                                                >{{ slotProps.data.type }}</span
+                                                class="max-w-[120px] truncate font-medium"
+                                                :title="
+                                                    slotProps.data.client_name
+                                                "
                                             >
+                                                {{ slotProps.data.client_name }}
+                                            </span>
+                                            <span
+                                                class="text-[10px] text-gray-400"
+                                            >
+                                                #{{ slotProps.data.number }}
+                                            </span>
                                         </div>
                                     </template>
                                 </Column>
-                                <Column field="issue_date" header="Date" />
+
                                 <Column header="Amount" class="text-right">
                                     <template #body="slotProps">
                                         <span
@@ -293,7 +377,7 @@ const polarOptions = ref({
                                                     slotProps.data.type ===
                                                     InvoiceType.EXPENSE,
                                             }"
-                                            class="text-sm font-bold"
+                                            class="font-bold"
                                         >
                                             {{
                                                 slotProps.data.type ===
@@ -309,62 +393,87 @@ const polarOptions = ref({
                                         </span>
                                     </template>
                                 </Column>
-                                <Column header="Status">
+
+                                <Column header="" style="width: 10%">
                                     <template #body="slotProps">
-                                        <Tag
-                                            :value="slotProps.data.status"
-                                            :severity="
-                                                getInvoiceStatusSeverity(
-                                                    slotProps.data.status,
-                                                )
-                                            "
-                                        />
+                                        <div
+                                            class="h-2 w-2 rounded-full"
+                                            :class="{
+                                                'bg-green-500':
+                                                    slotProps.data.status ===
+                                                    InvoiceStatus.PAID,
+                                                'bg-gray-300':
+                                                    slotProps.data.status ===
+                                                    InvoiceStatus.DRAFT,
+                                                'bg-red-500':
+                                                    slotProps.data.status ===
+                                                    InvoiceStatus.OVERDUE,
+                                                'bg-orange-400':
+                                                    slotProps.data.status ===
+                                                    InvoiceStatus.SENT,
+                                            }"
+                                            :title="slotProps.data.status"
+                                        ></div>
                                     </template>
                                 </Column>
                                 <template #empty>
-                                    <div class="py-6 text-center text-gray-500">
-                                        No recent transactions found.
+                                    <div
+                                        class="p-4 text-center text-xs text-gray-500"
+                                    >
+                                        No transactions found.
                                     </div>
                                 </template>
                             </DataTable>
-                        </template>
-                    </Card>
-                </div>
+                        </div>
+                    </template>
+                </Card>
+            </div>
 
-                <div class="flex flex-col gap-6">
-                    <Card class="shadow-sm">
-                        <template #title>Top Expense Categories</template>
-                        <template #content>
-                            <div
-                                class="mt-4 flex h-[250px] w-full justify-center"
-                            >
-                                <Chart
-                                    type="doughnut"
-                                    :data="doughnutData"
-                                    :options="doughnutOptions"
-                                    class="h-full w-full"
-                                />
-                            </div>
-                        </template>
-                    </Card>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <Card class="shadow-sm">
+                    <template #title>
+                        <span class="text-lg font-bold text-gray-700"
+                            >Monthly Volume</span
+                        >
+                    </template>
+                    <template #content>
+                        <div class="mt-2 flex h-[300px] w-full justify-center">
+                            <Chart
+                                type="bar"
+                                :data="monthlyBarData"
+                                :options="monthlyBarOptions"
+                                class="h-full w-full"
+                            />
+                        </div>
+                    </template>
+                </Card>
 
-                    <Card class="flex-grow shadow-sm">
-                        <template #title>Transaction Volume</template>
-                        <template #content>
-                            <div
-                                class="mt-4 flex h-[250px] w-full justify-center"
-                            >
-                                <Chart
-                                    type="polarArea"
-                                    :data="polarData"
-                                    :options="polarOptions"
-                                    class="h-full w-full"
-                                />
-                            </div>
-                        </template>
-                    </Card>
-                </div>
+                <Card class="shadow-sm">
+                    <template #title>
+                        <span class="text-lg font-bold text-gray-700"
+                            >Top Expenses by Entity</span
+                        >
+                    </template>
+                    <template #content>
+                        <div class="mt-2 flex h-[300px] w-full justify-center">
+                            <Chart
+                                type="doughnut"
+                                :data="expenseDonutData"
+                                :options="expenseDonutOptions"
+                                class="h-full w-full"
+                            />
+                        </div>
+                    </template>
+                </Card>
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+:deep(.p-datepicker-input) {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+</style>

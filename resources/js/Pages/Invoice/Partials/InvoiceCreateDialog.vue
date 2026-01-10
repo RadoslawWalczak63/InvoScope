@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Entity } from '@/Constants/Interfaces';
-import { InvoiceStatus, InvoiceType } from '@/Enum';
+import { Currency, InvoiceStatus, InvoiceType } from '@/Enum';
 import { useForm } from '@inertiajs/vue3';
 import { Button, Dialog, FloatLabel, InputText, Select } from 'primevue';
 
@@ -14,32 +14,39 @@ const emit = defineEmits(['update:open']);
 interface CreateInvoiceErrors {
     number?: string;
     issue_date?: string;
+    due_date?: string;
     type?: string;
     status?: string;
+    buyer_id?: string;
+    seller_id?: string;
 }
 
 interface CreateInvoiceForm {
     [key: string]: any;
 
     number: string;
-    issue_date: string;
+    issue_date: Date | null;
+    due_date: Date | null;
     type: string;
     status: string;
     buyer: Entity | null;
     seller: Entity | null;
     buyer_id: number | null;
     seller_id: number | null;
+    currency: string;
 }
 
 const form = useForm<CreateInvoiceForm>({
     number: '',
-    issue_date: new Date().toISOString().split('T')[0],
+    issue_date: new Date(),
+    due_date: null,
     type: '',
     status: InvoiceStatus.DRAFT,
     buyer: null,
     seller: null,
     buyer_id: null,
     seller_id: null,
+    currency: Currency.PLN,
 }) as ReturnType<typeof useForm<CreateInvoiceForm>> & {
     errors: CreateInvoiceErrors;
 };
@@ -94,9 +101,8 @@ const close = () => {
 
                 <div>
                     <FloatLabel variant="on">
-                        <InputText
+                        <DatePicker
                             id="issue_date"
-                            type="date"
                             v-model="form.issue_date"
                             class="w-full"
                             :invalid="!!form.errors.issue_date"
@@ -107,9 +113,22 @@ const close = () => {
                         {{ form.errors.issue_date }}
                     </small>
                 </div>
-            </div>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                    <FloatLabel variant="on">
+                        <DatePicker
+                            id="due_date"
+                            v-model="form.due_date"
+                            class="w-full"
+                            :invalid="!!form.errors.due_date"
+                        />
+                        <label for="due_date">Due Date</label>
+                    </FloatLabel>
+                    <small class="text-red-500" v-if="form.errors.due_date">
+                        {{ form.errors.due_date }}
+                    </small>
+                </div>
+
                 <div>
                     <FloatLabel variant="on">
                         <Select
@@ -141,6 +160,22 @@ const close = () => {
                         {{ form.errors.status }}
                     </small>
                 </div>
+
+                <div>
+                    <FloatLabel variant="on">
+                        <Select
+                            v-model="form.currency"
+                            inputId="currency"
+                            :options="Object.values(Currency)"
+                            class="w-full"
+                        />
+                        <label for="currency">Currency</label>
+                    </FloatLabel>
+
+                    <small class="text-red-500" v-if="form.errors.currency">
+                        {{ form.errors.currency }}
+                    </small>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -160,7 +195,15 @@ const close = () => {
                                 size="small"
                                 filter
                                 class="mb-2 w-full"
+                                :invalid="!!form.errors.buyer_id"
                             />
+
+                            <small
+                                class="text-red-500"
+                                v-if="form.errors.buyer_id"
+                            >
+                                {{ form.errors.buyer_id }}
+                            </small>
                         </div>
                         <div class="text-sm text-gray-600">
                             <div>
@@ -194,7 +237,15 @@ const close = () => {
                                 size="small"
                                 filter
                                 class="mb-2 w-full"
+                                :invalid="!!form.errors.seller_id"
                             />
+
+                            <small
+                                class="text-red-500"
+                                v-if="form.errors.seller_id"
+                            >
+                                {{ form.errors.seller_id }}
+                            </small>
                         </div>
                         <div class="text-sm text-gray-600">
                             <div>

@@ -3,7 +3,7 @@ FROM php:8.4-apache
 # Update and install required packages
 RUN apt update && apt install -y \
     vim git default-mysql-client nano cron \
-    libonig-dev libzip-dev libicu-dev locales-all \
+    libonig-dev libzip-dev libicu-dev locales-all poppler-utils \
     && docker-php-ext-install \
     bcmath mbstring pdo_mysql zip mysqli intl opcache \
     && rm -rf /var/lib/apt/lists/*

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Currency;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Http\Resources\EntityResource;
@@ -11,6 +12,7 @@ use App\Services\CopilotService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,9 +33,15 @@ class InvoiceController extends Controller
             ->allowedFilters([
                 AllowedFilter::partial('number'),
                 AllowedFilter::exact('type'),
-                AllowedFilter::exact('issue_date'),
-                AllowedFilter::exact('due_date'),
-                AllowedFilter::exact('paid_date'),
+                AllowedFilter::callback('issue_date', function (Builder $query, $value) {
+                    $query->whereDate('issue_date', Carbon::parse($value)->toDateString());
+                }),
+                AllowedFilter::callback('due_date', function (Builder $query, $value) {
+                    $query->whereDate('due_date', Carbon::parse($value)->toDateString());
+                }),
+                AllowedFilter::callback('paid_date', function (Builder $query, $value) {
+                    $query->whereDate('paid_date', Carbon::parse($value)->toDateString());
+                }),
                 AllowedFilter::callback('buyer', function (Builder $query, $value) {
                     $query->whereHas('buyer', function (Builder $q) use ($value) {
                         $q->where('company_name', 'like', "%{$value}%")
@@ -154,9 +162,12 @@ class InvoiceController extends Controller
             'issue_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:issue_date',
             'type' => ['required', new Enum(InvoiceType::class)],
+            'currency' => ['required', new Enum(Currency::class)],
             'buyer_id' => 'required|exists:entities,id',
             'seller_id' => 'required|exists:entities,id',
         ]);
+
+        $validated['user_id'] = $request->user()->id;
 
         $invoice = Invoice::create($validated);
 

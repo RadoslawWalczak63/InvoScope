@@ -3,12 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Currency;
-use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Models\Invoice;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,101 +23,103 @@ class DashboardController extends Controller
         ]);
 
         $userId = $request->user()->id;
-        $startDate = $request->input('startDate', Carbon::now()->startOfMonth()->toDateString());
-        $endDate = $request->input('endDate', Carbon::now()->endOfMonth()->toDateString());
+        $startDate = $request->input('startDate', Carbon::now()->startOfQuarter()->toDateString());
+        $endDate = $request->input('endDate', Carbon::now()->endOfQuarter()->toDateString());
 
         $availableCurrencies = Invoice::query()
             ->where('user_id', $userId)
-            ->whereBetween('issue_date', [$startDate, $endDate])
             ->distinct()
-            ->pluck('currency')
-            ->map(fn ($value) => $value->value);
+            ->pluck('currency');
 
-        $currency = $availableCurrencies->intersect(Arr::wrap($request->input('currency')))->first() ?: $availableCurrencies->first() ?: Currency::PLN->value;
+        $currency = $availableCurrencies->contains($request->input('currency'))
+            ? $request->input('currency')
+            : ($availableCurrencies->first() ?? Currency::USD->value);
 
-        $aggregates = Invoice::where('user_id', $userId)
-            ->where('currency', $currency)
-            ->whereBetween('issue_date', [$startDate, $endDate])
+        // FIX: Explicitly use 'invoices.' prefix to avoid ambiguity when joining other tables later
+        $baseQuery = Invoice::where('invoices.user_id', $userId)
+            ->where('invoices.currency', $currency)
+            ->whereBetween('invoices.issue_date', [$startDate, $endDate]);
+
+        $totals = (clone $baseQuery)
             ->join('invoice_items', 'invoices.id', '=', 'invoice_items.invoice_id')
-            ->selectRaw('invoices.type, SUM(invoice_items.net_total) as total_amount')
-            ->groupBy('invoices.type')
-            ->pluck('total_amount', 'type');
+            ->selectRaw('
+                SUM(CASE WHEN type = ? THEN invoice_items.net_total ELSE 0 END) as income,
+                SUM(CASE WHEN type = ? THEN invoice_items.net_total ELSE 0 END) as expense
+            ', [InvoiceType::INCOME, InvoiceType::EXPENSE])
+            ->first();
 
-        $income = $aggregates->get(InvoiceType::INCOME->value) ?? 0;
-        $expense = $aggregates->get(InvoiceType::EXPENSE->value) ?? 0;
-
-        $overdue = Invoice::where('user_id', $userId)
-            ->where('currency', $currency)
-            ->where('status', InvoiceStatus::OVERDUE)
+        $dailyData = (clone $baseQuery)
             ->join('invoice_items', 'invoices.id', '=', 'invoice_items.invoice_id')
-            ->whereBetween('issue_date', [$startDate, $endDate])
-            ->selectRaw('SUM(invoice_items.net_total) as total_overdue')
-            ->value('total_overdue') ?? 0;
+            ->selectRaw('
+                DATE(invoices.issue_date) as date,
+                SUM(CASE WHEN type = ? THEN invoice_items.net_total ELSE 0 END) as income,
+                SUM(CASE WHEN type = ? THEN invoice_items.net_total ELSE 0 END) as expense
+            ', [InvoiceType::INCOME, InvoiceType::EXPENSE])
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->keyBy('date');
 
-        $stats = [
-            'income' => (float) $income,
-            'expense' => (float) $expense,
-            'profit' => (float) ($income - $expense),
-            'overdue' => (float) $overdue,
+        $chartData = [
+            'labels' => [],
+            'income' => [],
+            'expense' => [],
+            'net_cumulative' => [],
         ];
 
-        $monthlyData = Invoice::where('user_id', $userId)
-            ->where('currency', $currency)
-            ->whereBetween('issue_date', [$startDate, $endDate])
+        $period = CarbonPeriod::create($startDate, $endDate);
+        $runningTotal = 0;
+
+        foreach ($period as $date) {
+            $formattedDate = $date->format('Y-m-d');
+            $dayData = $dailyData->get($formattedDate);
+
+            $inc = $dayData ? (float) $dayData->income : 0;
+            $exp = $dayData ? (float) $dayData->expense : 0;
+            $runningTotal += ($inc - $exp);
+
+            $chartData['labels'][] = $date->format('M d');
+            $chartData['income'][] = $inc;
+            $chartData['expense'][] = $exp;
+            $chartData['net_cumulative'][] = $runningTotal;
+        }
+
+        $monthlyStats = (clone $baseQuery)
             ->join('invoice_items', 'invoices.id', '=', 'invoice_items.invoice_id')
             ->selectRaw("
-                DATE_FORMAT(issue_date, '%Y-%m') as month_key,
-                DATE_FORMAT(issue_date, '%b') as month_label,
-                invoices.type,
-                SUM(invoice_items.net_total) as total
-            ")
-            ->groupBy('month_key', 'month_label', 'type')
+                DATE_FORMAT(invoices.issue_date, '%Y-%m') as month_key,
+                DATE_FORMAT(invoices.issue_date, '%b') as month_label,
+                SUM(CASE WHEN type = ? THEN invoice_items.net_total ELSE 0 END) as income,
+                SUM(CASE WHEN type = ? THEN invoice_items.net_total ELSE 0 END) as expense
+            ", [InvoiceType::INCOME, InvoiceType::EXPENSE])
+            ->groupBy('month_key', 'month_label')
             ->orderBy('month_key')
             ->get();
 
-        $months = $monthlyData->pluck('month_label')->unique()->values()->toArray();
-        $monthlyPerformance = [
-            'labels' => $months,
-            'income' => $this->mapChartData($months, $monthlyData, InvoiceType::INCOME),
-            'expense' => $this->mapChartData($months, $monthlyData, InvoiceType::EXPENSE),
-        ];
-
-        $expenseCategoriesData = Invoice::query()
-            ->where('invoices.user_id', $userId)
+        $topExpenses = (clone $baseQuery)
             ->where('invoices.type', InvoiceType::EXPENSE)
-            ->where('invoices.currency', $currency)
-            ->whereBetween('invoices.issue_date', [$startDate, $endDate])
+            ->join('entities', 'invoices.seller_id', '=', 'entities.id')
             ->join('invoice_items', 'invoices.id', '=', 'invoice_items.invoice_id')
-            ->join('entities as sellers', 'invoices.seller_id', '=', 'sellers.id')
             ->selectRaw("
-                COALESCE(NULLIF(sellers.company_name, ''), CONCAT(sellers.first_name, ' ', sellers.last_name)) AS name,
-                SUM(invoice_items.net_total) AS total
+                COALESCE(NULLIF(entities.company_name, ''), CONCAT(entities.first_name, ' ', entities.last_name)) as name,
+                SUM(invoice_items.net_total) as total
             ")
-            ->groupBy('sellers.id', 'sellers.company_name', 'sellers.first_name', 'sellers.last_name')
+            ->groupBy('entities.id', 'name')
             ->orderByDesc('total')
             ->limit(5)
             ->get();
 
-        $typeDistribution = Invoice::where('user_id', $userId)
-            ->where('currency', $currency)
-            ->whereBetween('issue_date', [$startDate, $endDate])
-            ->selectRaw('type, count(*) as count')
-            ->groupBy('type')
-            ->get();
-
-        $recentInvoices = Invoice::where('user_id', $userId)
-            ->where('currency', $currency)
-            ->whereBetween('issue_date', [$startDate, $endDate])
+        $recentInvoices = (clone $baseQuery)
+            ->select('invoices.*')
             ->with(['buyer', 'seller'])
             ->withSum('items', 'net_total')
-            ->orderBy('issue_date', 'desc')
-            ->limit(5)
+            ->orderBy('invoices.issue_date', 'desc')
+            ->limit(7)
             ->get()
-            ->toBase()
             ->map(fn (Invoice $invoice) => [
                 'id' => $invoice->id,
                 'number' => $invoice->number,
-                'client_name' => $invoice->type === InvoiceType::INCOME ? $invoice->buyer->name : $invoice->seller->name,
+                'client_name' => $invoice->type === InvoiceType::INCOME ? $invoice->buyer->company_name ?? $invoice->buyer->first_name : $invoice->seller->company_name ?? $invoice->seller->first_name,
                 'issue_date' => $invoice->issue_date->toDateString(),
                 'amount' => (float) $invoice->items_sum_net_total,
                 'status' => $invoice->status,
@@ -126,34 +127,28 @@ class DashboardController extends Controller
             ]);
 
         return Inertia::render('Dashboard', [
-            'stats' => $stats,
-            'charts' => [
-                'monthly' => $monthlyPerformance,
-                'expenses' => [
-                    'labels' => $expenseCategoriesData->pluck('name'),
-                    'data' => $expenseCategoriesData->pluck('total'),
-                ],
-                'status' => [
-                    'labels' => $typeDistribution->pluck('type'),
-                    'data' => $typeDistribution->pluck('count'),
-                ],
+            'kpis' => [
+                'income' => (float) ($totals->income ?? 0),
+                'expense' => (float) ($totals->expense ?? 0),
+                'profit' => (float) (($totals->income ?? 0) - ($totals->expense ?? 0)),
+            ],
+            'chart' => $chartData,
+            'monthlyChart' => [
+                'labels' => $monthlyStats->pluck('month_label'),
+                'income' => $monthlyStats->pluck('income'),
+                'expense' => $monthlyStats->pluck('expense'),
+            ],
+            'expenseBreakdown' => [
+                'labels' => $topExpenses->pluck('name'),
+                'data' => $topExpenses->pluck('total'),
             ],
             'recentInvoices' => $recentInvoices,
-            'selectedCurrency' => $currency,
-            'currencies' => $availableCurrencies,
             'filters' => [
+                'currency' => $currency,
+                'currencies' => $availableCurrencies->values(),
                 'startDate' => $startDate,
                 'endDate' => $endDate,
             ],
         ]);
-    }
-
-    private function mapChartData(array $labels, $dataCollection, InvoiceType $type): array
-    {
-        return array_map(function ($label) use ($dataCollection, $type) {
-            $record = $dataCollection->first(fn ($item) => $item->month_label === $label && $item->type === $type);
-
-            return $record ? (float) $record->total : 0;
-        }, $labels);
     }
 }

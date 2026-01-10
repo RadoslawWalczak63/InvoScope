@@ -13,6 +13,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Imagick;
+use Spatie\PdfToText\Pdf;
 use Throwable;
 
 class ProcessInvoiceImport extends Command
@@ -32,7 +33,7 @@ class ProcessInvoiceImport extends Command
         $this->queuedJob = QueuedJob::findOrFail($this->option('queuedJobId'));
         $this->queuedJob->started();
 
-        [$success, $imagePath] = $this->getImage();
+        [$success, $imagePath, $pdfText] = $this->getImage();
 
         if (! $success) {
             $this->queuedJob->failed();
@@ -43,7 +44,7 @@ class ProcessInvoiceImport extends Command
         $this->queuedJob->addLog('Processing image: '.$imagePath);
 
         try {
-            $this->processImage($imagePath);
+            $this->processImage($imagePath, $pdfText);
 
             $this->queuedJob->finished();
             $this->queuedJob->addLog(
@@ -67,7 +68,7 @@ class ProcessInvoiceImport extends Command
         $fileExtension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
 
         if (in_array($fileExtension, ['jpg', 'jpeg', 'png', 'bmp', 'tiff'])) {
-            return [true, $filePath];
+            return [true, $filePath, null];
         }
 
         $basePdfName = pathinfo($filePath, PATHINFO_FILENAME);
@@ -90,25 +91,25 @@ class ProcessInvoiceImport extends Command
 
         $this->queuedJob->addLog('Extracted image from PDF to: '.$imagePath);
 
-        return [true, $imagePath];
+        return [true, $imagePath, Pdf::getText($filePath)];
     }
 
     /**
      * @throws Throwable
      */
-    private function processImage(string $imageFullPath): void
+    private function processImage(string $imageFullPath, ?string $pdfText): void
     {
         $imageBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($imageFullPath));
 
         $messages = [
             [
                 'role' => 'system',
-                'content' => 'You are an expert data extraction assistant. Extract all invoice data exactly as it appears on the image. Do not attempt to guess database IDs.',
+                'content' => 'You are an expert data extraction assistant. Extract all invoice data exactly as it appears on the image. Do not attempt to guess.',
             ],
             [
                 'role' => 'user',
                 'content' => [
-                    ['type' => 'text', 'text' => 'Extract the data from this invoice.'],
+                    ['type' => 'text', 'text' => 'Extract the data from this invoice.'.($pdfText ? ' Here is the extracted text from the PDF: '.$pdfText : '')],
                     ['type' => 'image_url', 'image_url' => ['url' => $imageBase64]],
                 ],
             ],
@@ -132,6 +133,7 @@ class ProcessInvoiceImport extends Command
             throw new Exception('Failed to decode AI JSON response: '.json_last_error_msg());
         }
 
+        logger($invoiceData);
         $this->saveInvoiceToDatabase($invoiceData);
     }
 

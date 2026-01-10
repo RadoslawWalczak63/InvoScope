@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Entity;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
@@ -12,30 +13,49 @@ class InvoiceSeeder extends Seeder
 {
     public function run(): void
     {
-        $user = User::first();
+        $user = User::firstOrFail();
 
-        if ($user->entities()->count() < 2) {
-            Entity::factory()->count(10)->for($user)->create();
+        if ($user->entities()->count() < 8) {
+            Entity::factory()->count(12)->for($user)->create();
         }
 
         $entities = $user->entities;
 
-        Invoice::factory()
-            ->count(50)
-            ->for($user)
-            ->make()
-            ->each(function (Invoice $invoice) use ($entities) {
-                $buyer = $entities->random();
-                $seller = $entities->where('id', '!=', $buyer->id)->random();
+        foreach (range(1, 12) as $monthsAgo) {
 
-                $invoice->buyer_id = $buyer->id;
-                $invoice->seller_id = $seller->id;
-                $invoice->save();
+            $invoiceCount = rand(2, 6) + (12 - $monthsAgo);
 
-                InvoiceItem::factory()
-                    ->count(rand(1, 5))
-                    ->for($invoice)
-                    ->create();
-            });
+            Invoice::factory()
+                ->count($invoiceCount)
+                ->for($user)
+                ->make()
+                ->each(function (Invoice $invoice) use ($entities, $monthsAgo) {
+                    $buyer = $entities->random();
+                    $seller = $entities->where('id', '!=', $buyer->id)->random();
+
+                    $issueDate = now()->subMonths($monthsAgo)->addDays(rand(1, 25));
+
+                    $invoice->buyer_id = $buyer->id;
+                    $invoice->seller_id = $seller->id;
+                    $invoice->issue_date = $issueDate;
+                    $invoice->due_date = (clone $issueDate)->addDays(14);
+
+                    if (rand(1, 100) <= 75) {
+                        $invoice->status = InvoiceStatus::PAID;
+                        $invoice->paid_date = (clone $issueDate)->addDays(rand(1, 14));
+                    } elseif (rand(1, 100) <= 90) {
+                        $invoice->status = InvoiceStatus::SENT;
+                    } else {
+                        $invoice->status = InvoiceStatus::OVERDUE;
+                    }
+
+                    $invoice->save();
+
+                    InvoiceItem::factory()
+                        ->count(rand(1, 5))
+                        ->for($invoice)
+                        ->create();
+                });
+        }
     }
 }

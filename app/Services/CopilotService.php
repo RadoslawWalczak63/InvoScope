@@ -96,7 +96,7 @@ class CopilotService
                         'buyer_details' => [
                             'type' => 'object',
                             'properties' => [
-                                'name' => ['type' => ['string', 'null']],
+                                'name' => ['type' => ['string']],
                                 'tax_id' => ['type' => ['string', 'null']],
                                 'address' => ['type' => ['string', 'null']],
                             ],
@@ -106,7 +106,7 @@ class CopilotService
                         'seller_details' => [
                             'type' => 'object',
                             'properties' => [
-                                'name' => ['type' => ['string', 'null']],
+                                'name' => ['type' => ['string']],
                                 'tax_id' => ['type' => ['string', 'null']],
                                 'address' => ['type' => ['string', 'null']],
                             ],
