@@ -568,7 +568,10 @@ const formatCurrency = (value: number) => {
                                     <div class="text-xs text-gray-500">
                                         {{ slotProps.data.description }}
                                     </div>
-                                    <div class="text-xs text-gray-400">
+                                    <div
+                                        class="text-xs text-gray-400"
+                                        v-if="slotProps.data.sku"
+                                    >
                                         SKU: {{ slotProps.data.sku || '—' }}
                                     </div>
                                 </div>

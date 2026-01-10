@@ -38,7 +38,7 @@ services:
     db:
         container_name: "${CONTAINER_NAME}-db"
         image: mysql:9.3
-        command: --secure-file-priv='' --skip-log-bin
+        command: --secure-file-priv='' --skip-log-bin --require_secure_transport=OFF
         environment:
             MYSQL_DATABASE: laravel
             MYSQL_ROOT_PASSWORD: "${MYSQL_PASSWORD:-test}"

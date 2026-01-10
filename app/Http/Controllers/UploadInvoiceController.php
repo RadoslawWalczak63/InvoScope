@@ -34,6 +34,6 @@ class UploadInvoiceController extends Controller
 
         return response()
             ->redirectToRoute('invoices.index')
-            ->with('status', 'Invoices are being processed and will appear shortly.');
+            ->with('success', 'Invoices are being processed and will appear shortly.');
     }
 }

@@ -1,13 +1,26 @@
 <script setup lang="ts">
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
+import { PageProps } from '@/types';
 import { Avatar, Button, Drawer, Menu } from 'primevue';
 import { MenuItem } from 'primevue/menuitem';
+import Swal from 'sweetalert2';
+
+interface FlashMessage {
+    success?: string;
+    error?: string;
+    warning?: string;
+    info?: string;
+}
+
+interface CustomPageProps extends PageProps {
+    flash?: FlashMessage;
+}
 
 const showingMobileMenu = ref(false);
-const page = usePage();
+const page = usePage<CustomPageProps>();
 const user = page.props.auth.user;
 
 const navItems = [
@@ -54,6 +67,44 @@ const userMenu = ref();
 const toggleUserMenu = (event: Event) => {
     userMenu.value.toggle(event);
 };
+
+const messageIcon = computed(() => {
+    if (page.props.flash?.success) return 'success';
+    if (page.props.flash?.error) return 'error';
+    if (page.props.flash?.warning) return 'warning';
+    if (page.props.flash?.info) return 'info';
+    return undefined;
+});
+
+const message = computed(() => {
+    return (
+        page.props.flash?.success ||
+        page.props.flash?.error ||
+        page.props.flash?.warning ||
+        page.props.flash?.info ||
+        ''
+    );
+});
+
+watch(
+    () => page.props.flash,
+    () => {
+        if (message.value) {
+            Swal.fire({
+                text: message.value,
+                icon: messageIcon.value,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+            });
+        }
+    },
+    {
+        deep: true,
+        immediate: true,
+    },
+);
 </script>
 
 <template>
