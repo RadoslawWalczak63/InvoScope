@@ -12,7 +12,7 @@ import {
     PaginatedResource,
     Resource,
 } from '@/Constants/Interfaces';
-import { Currency, InvoiceItemUnit, InvoiceStatus } from '@/Enum';
+import { Currency, InvoiceItemUnit, InvoiceStatus, InvoiceType } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InvoiceDownloadDialog from '@/Pages/Invoice/Partials/InvoiceDownloadDialog.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -392,6 +392,19 @@ const formatCurrency = (value: number) => {
                                         fluid
                                         iconDisplay="input"
                                         dateFormat="yy-mm-dd"
+                                    />
+                                </template>
+                            </EditableField>
+
+                            <EditableField label="Type" :isEditing="isEditing">
+                                <template #view
+                                    >{{ invoice.data.type }}
+                                </template>
+                                <template #input>
+                                    <Select
+                                        v-model="form.type"
+                                        :options="Object.values(InvoiceType)"
+                                        class="w-full"
                                     />
                                 </template>
                             </EditableField>

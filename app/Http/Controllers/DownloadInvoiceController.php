@@ -11,6 +11,10 @@ class DownloadInvoiceController extends Controller
 {
     public function __invoke(Request $request, Invoice $invoice)
     {
+        $request->validate([
+            'download' => ['sometimes', 'boolean'],
+        ]);
+
         $disk = Storage::disk('local');
         abort_if(! $invoice->file_path || ! $disk->exists($invoice->file_path), 404, 'Invoice file not found.');
         $fileExtension = pathinfo($invoice->file_path, PATHINFO_EXTENSION);
@@ -20,6 +24,10 @@ class DownloadInvoiceController extends Controller
             '',
             Str::snake($invoice->number)
         ).'.'.$fileExtension;
+
+        if (! $request->boolean('download')) {
+            return $disk->response($invoice->file_path, $fileName);
+        }
 
         return $disk->download($invoice->file_path, $fileName);
     }

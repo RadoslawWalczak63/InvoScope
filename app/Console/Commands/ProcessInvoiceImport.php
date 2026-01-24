@@ -133,7 +133,6 @@ class ProcessInvoiceImport extends Command
             throw new Exception('Failed to decode AI JSON response: '.json_last_error_msg());
         }
 
-        logger($invoiceData);
         $this->saveInvoiceToDatabase($invoiceData);
     }
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Currency;
 use App\Enums\InvoiceStatus;
+use App\Enums\InvoiceTemplate;
 use App\Enums\InvoiceType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property InvoiceType $type
  * @property InvoiceStatus $status
  * @property Currency $currency
+ * @property InvoiceTemplate|null $template
  */
 class Invoice extends Model
 {
@@ -34,6 +36,7 @@ class Invoice extends Model
             'type' => InvoiceType::class,
             'status' => InvoiceStatus::class,
             'currency' => Currency::class,
+            'template' => InvoiceTemplate::class,
         ];
     }
 

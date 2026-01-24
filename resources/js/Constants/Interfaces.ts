@@ -70,6 +70,7 @@ export interface Invoice {
     seller_id: number;
     bank_account_number: string;
     file_url?: string;
+    template?: string;
     buyer: Entity;
     seller: Entity;
     items: InvoiceItem[];

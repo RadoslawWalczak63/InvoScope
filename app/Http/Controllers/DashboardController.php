@@ -23,8 +23,8 @@ class DashboardController extends Controller
         ]);
 
         $userId = $request->user()->id;
-        $startDate = $request->input('startDate', Carbon::now()->startOfQuarter()->toDateString());
-        $endDate = $request->input('endDate', Carbon::now()->endOfQuarter()->toDateString());
+        $startDate = $request->input('startDate', Carbon::now()->startOfMonth()->subMonth()->toDateString());
+        $endDate = $request->input('endDate', Carbon::now());
 
         $availableCurrencies = Invoice::query()
             ->where('user_id', $userId)

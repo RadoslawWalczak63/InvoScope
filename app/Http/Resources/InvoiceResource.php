@@ -28,7 +28,8 @@ class InvoiceResource extends JsonResource
             'buyer_id' => $this->buyer_id,
             'seller_id' => $this->seller_id,
             'bank_account_number' => $this->bank_account_number,
-            'file_url' => $this->whenHas('file_path', function () {
+            'template' => $this->template,
+            'file_url' => $this->when((bool) $this->file_path, function () {
                 return route('invoices.download', ['invoice' => $this->id]);
             }),
             'buyer' => new EntityResource($this->whenLoaded('buyer')),

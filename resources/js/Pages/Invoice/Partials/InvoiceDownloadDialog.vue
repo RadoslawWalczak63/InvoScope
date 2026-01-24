@@ -19,7 +19,9 @@ const props = defineProps<{
 const emit = defineEmits(['update:open']);
 
 const isIframeLoaded = ref(false);
-const selectedTemplate = ref(Object.values(InvoiceTemplate)[0]);
+const selectedTemplate = ref(
+    props.invoice.template ?? Object.values(InvoiceTemplate)[0],
+);
 
 const previewUrl = computed(() => {
     return route('invoices.preview', {
@@ -71,8 +73,9 @@ const close = () => {
         <div class="flex h-[70vh] flex-col lg:flex-row">
             <div
                 class="border-surface-200 dark:border-surface-700 flex w-full flex-col gap-6 p-6 lg:w-1/3 lg:border-r"
+                v-if="originalFileUrl || !invoice.template"
             >
-                <div v-if="originalFileUrl">
+                <div>
                     <div class="mb-3 flex items-center justify-between">
                         <span
                             class="text-surface-500 dark:text-surface-400 text-sm font-semibold"
@@ -120,7 +123,10 @@ const close = () => {
 
                 <Divider v-if="originalFileUrl" />
 
-                <div class="flex flex-1 flex-col">
+                <div
+                    class="flex flex-1 flex-col"
+                    v-if="!invoice.template && !originalFileUrl"
+                >
                     <div
                         class="text-surface-500 dark:text-surface-400 mb-2 text-sm font-semibold"
                     >
@@ -131,11 +137,17 @@ const close = () => {
                         v-model="selectedTemplate"
                         :options="Object.values(InvoiceTemplate)"
                     />
+
+                    <div class="text-surface-500 mt-2 text-xs">
+                        Downloading the generated PDF will permanently set the
+                        selected template for this invoice.
+                    </div>
                 </div>
             </div>
 
             <div
-                class="bg-surface-100 dark:bg-surface-900 relative flex w-full flex-col lg:w-2/3"
+                class="bg-surface-100 dark:bg-surface-900 relative flex w-full flex-col"
+                :class="{ 'lg:w-2/3': originalFileUrl || !invoice.template }"
             >
                 <div
                     class="border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-800 flex items-center justify-between border-b py-3 pl-4"
@@ -147,7 +159,10 @@ const close = () => {
                         Preview
                     </span>
 
-                    <span class="text-surface-500 text-xs">
+                    <span
+                        class="text-surface-500 text-xs"
+                        v-if="invoice.template"
+                    >
                         {{ selectedTemplate }}
                         Template
                     </span>
