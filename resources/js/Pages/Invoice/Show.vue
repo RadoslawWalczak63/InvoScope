@@ -187,6 +187,14 @@ const formatCurrency = (value: number) => {
         currency: isEditing.value ? form.currency : props.invoice.data.currency,
     }).format(value);
 };
+
+const onInvoiceDownload = () => {
+    isDownloadModalOpen.value = false;
+    router.visit(route('invoices.show', props.invoice.data.id), {
+        preserveScroll: true,
+        preserveState: true,
+    });
+};
 </script>
 
 <template>
@@ -785,6 +793,7 @@ const formatCurrency = (value: number) => {
             :open="isDownloadModalOpen"
             :invoice="invoice.data"
             @update:open="(newVal) => (isDownloadModalOpen = newVal)"
+            @downloaded-invoice="onInvoiceDownload"
         />
     </AuthenticatedLayout>
 </template>

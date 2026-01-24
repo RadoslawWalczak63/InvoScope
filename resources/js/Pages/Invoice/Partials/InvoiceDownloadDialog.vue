@@ -16,7 +16,7 @@ const props = defineProps<{
     invoice: Invoice;
 }>();
 
-const emit = defineEmits(['update:open']);
+const emit = defineEmits(['update:open', 'downloadedInvoice']);
 
 const isIframeLoaded = ref(false);
 const selectedTemplate = ref(
@@ -46,6 +46,7 @@ const handleDownloadGenerated = () => {
     });
 
     window.open(downloadUrl, '_blank');
+    emit('downloadedInvoice');
 };
 
 const handleDownloadOriginal = () => {
