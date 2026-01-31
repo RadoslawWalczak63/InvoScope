@@ -35,7 +35,6 @@ class DashboardController extends Controller
             ? $request->input('currency')
             : ($availableCurrencies->first() ?? Currency::USD->value);
 
-        // FIX: Explicitly use 'invoices.' prefix to avoid ambiguity when joining other tables later
         $baseQuery = Invoice::where('invoices.user_id', $userId)
             ->where('invoices.currency', $currency)
             ->whereBetween('invoices.issue_date', [$startDate, $endDate]);

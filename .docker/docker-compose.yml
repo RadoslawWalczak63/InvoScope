@@ -54,24 +54,24 @@ services:
         networks:
             - proxy
 
-    selenium:
-        image: 'selenium/standalone-chromium'
-        extra_hosts:
-            - 'host.docker.internal:host-gateway'
-        volumes:
-            - '/dev/shm:/dev/shm'
-        labels:
-            - 'traefik.enable=true'
-            - 'traefik.http.routers.selenium.rule=Host(`selenium.${DOMAIN}`)'
-            - 'traefik.http.routers.selenium.entrypoints=web'
-            - 'traefik.http.routers.selenium.service=selenium'
-            - 'traefik.http.services.selenium.loadbalancer.server.port=4444'
-            - 'traefik.http.routers.novnc.rule=Host(`novnc.${DOMAIN}`)'
-            - 'traefik.http.routers.novnc.entrypoints=web'
-            - 'traefik.http.routers.novnc.service=novnc'
-            - 'traefik.http.services.novnc.loadbalancer.server.port=7900'
-        networks:
-            - proxy
+#    selenium:
+#        image: 'selenium/standalone-chromium'
+#        extra_hosts:
+#            - 'host.docker.internal:host-gateway'
+#        volumes:
+#            - '/dev/shm:/dev/shm'
+#        labels:
+#            - 'traefik.enable=true'
+#            - 'traefik.http.routers.selenium.rule=Host(`selenium.${DOMAIN}`)'
+#            - 'traefik.http.routers.selenium.entrypoints=web'
+#            - 'traefik.http.routers.selenium.service=selenium'
+#            - 'traefik.http.services.selenium.loadbalancer.server.port=4444'
+#            - 'traefik.http.routers.novnc.rule=Host(`novnc.${DOMAIN}`)'
+#            - 'traefik.http.routers.novnc.entrypoints=web'
+#            - 'traefik.http.routers.novnc.service=novnc'
+#            - 'traefik.http.services.novnc.loadbalancer.server.port=7900'
+#        networks:
+#            - proxy
 
 networks:
     proxy:
