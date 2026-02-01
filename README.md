@@ -1,4 +1,4 @@
-# Invoscope
+# InvoScope
 
 A Dockerized Laravel environment with MySQL, Vite, and Traefik.
 
