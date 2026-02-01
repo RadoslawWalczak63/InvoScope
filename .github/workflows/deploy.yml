@@ -24,7 +24,6 @@ jobs:
 
             git pull origin main
 
-            # 2. Rebuild
             docker compose up -d --build
 
             echo "📦 Installing PHP Dependencies..."
