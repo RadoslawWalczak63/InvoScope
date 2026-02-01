@@ -24,7 +24,7 @@ jobs:
 
             git pull origin main
 
-            docker compose up -d --build
+            docker compose up -d --build > >(tee /dev/null) 2> >(tee /dev/stderr)
 
             echo "📦 Installing PHP Dependencies..."
             docker compose exec -T web composer install --no-dev --optimize-autoloader
@@ -36,12 +36,9 @@ jobs:
             echo "🗄️ Running Migrations..."
             docker compose exec -T web php artisan migrate --force
 
-            echo "🧹 Clearing and Rebuilding Caches..."
-            docker compose exec -T web php artisan optimize:clear
-            docker compose exec -T web php artisan config:cache
-            docker compose exec -T web php artisan route:cache
-            docker compose exec -T web php artisan view:cache
-
             echo "🔄 Restarting Queues & Supervisor..."
             docker compose exec -T web php artisan queue:restart
             docker compose exec -T web service supervisor restart
+
+            echo "🧹 Clearing and Rebuilding Caches..."
+            docker compose exec -T web php artisan optimize:clear
