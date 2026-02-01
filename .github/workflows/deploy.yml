@@ -45,4 +45,4 @@ jobs:
 
             echo "🔄 Restarting Queues & Supervisor..."
             docker compose exec -T web php artisan queue:restart
-            docker compose exec -T web supervisorctl restart all
+            docker compose exec -T web service supervisor restart
