@@ -1,0 +1,45 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    name: Deploy to InvoScope
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: "invoscope.tech"
+          username: "root"
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            cd /home/InvoScope || exit
+
+            git pull origin main
+            docker compose up -d --build
+
+            echo "📦 Installing PHP Dependencies..."
+            docker compose exec -T web composer install --no-dev --optimize-autoloader
+
+            echo "🎨 Installing Node Dependencies & Building..."
+            docker compose exec -T web npm install
+            docker compose exec -T web npm run build
+
+            echo "🗄️ Running Migrations..."
+            docker compose exec -T web php artisan migrate --force
+
+            echo "🧹 Clearing and Rebuilding Caches..."
+            docker compose exec -T web php artisan optimize:clear
+            docker compose exec -T web php artisan config:cache
+            docker compose exec -T web php artisan route:cache
+            docker compose exec -T web php artisan view:cache
+
+            echo "🔄 Restarting Queues & Supervisor..."
+            docker compose exec -T web php artisan queue:restart
+
+            docker compose exec -T web supervisorctl restart all
