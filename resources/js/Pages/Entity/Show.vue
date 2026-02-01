@@ -59,7 +59,8 @@ const saveEntity = () => {
 
 const deleteEntity = () => {
     confirm.require({
-        message: 'Are you sure you want to delete this entity?',
+        message:
+            'Are you sure you want to delete this entity? All related invoices will also be deleted.',
         header: 'Danger Zone',
         icon: 'pi pi-exclamation-triangle',
         rejectProps: { label: 'Cancel', severity: 'secondary', outlined: true },

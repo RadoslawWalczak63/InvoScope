@@ -164,6 +164,10 @@ class ProcessInvoiceImport extends Command
                 ]
             );
 
+            if (! $invoice->wasRecentlyCreated) {
+                $this->queuedJob->addLog("Invoice {$invoice->number} already exists. Updating existing record.");
+            }
+
             $invoice->items()->delete();
 
             foreach ($data['items'] as $item) {

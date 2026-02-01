@@ -76,7 +76,7 @@ const close = () => {
                 class="border-surface-200 dark:border-surface-700 flex w-full flex-col gap-6 p-6 lg:w-1/3 lg:border-r"
                 v-if="originalFileUrl || !invoice.template"
             >
-                <div>
+                <div v-if="originalFileUrl">
                     <div class="mb-3 flex items-center justify-between">
                         <span
                             class="text-surface-500 dark:text-surface-400 text-sm font-semibold"
