@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { InvoiceStatus, InvoiceType } from '@/Enum';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import Column from 'primevue/column';
@@ -369,7 +369,15 @@ const expenseDonutOptions = ref({
                             >
                                 <Column field="client_name" header="Party">
                                     <template #body="slotProps">
-                                        <div class="flex flex-col">
+                                        <Link
+                                            :href="
+                                                route(
+                                                    'invoices.show',
+                                                    slotProps.data.id,
+                                                )
+                                            "
+                                            class="flex flex-col hover:underline"
+                                        >
                                             <span
                                                 class="max-w-[120px] truncate font-medium"
                                                 :title="
@@ -383,7 +391,7 @@ const expenseDonutOptions = ref({
                                             >
                                                 #{{ slotProps.data.number }}
                                             </span>
-                                        </div>
+                                        </Link>
                                     </template>
                                 </Column>
 
