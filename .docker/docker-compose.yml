@@ -45,12 +45,6 @@ services:
         volumes:
             - ./docker_volumes/db:/var/lib/mysql
             - ./main-db/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.routers.${CONTAINER_NAME}-db.entrypoints=${ENTRYPOINT_DB}"
-            - "traefik.http.routers.${CONTAINER_NAME}-db.rule=Host(`db.${DOMAIN}`)"
-            - "traefik.http.routers.${CONTAINER_NAME}-db.service=${CONTAINER_NAME}-db"
-            - "traefik.http.services.${CONTAINER_NAME}-db.loadbalancer.server.port=${MYSQL_PORT:-3306}"
         networks:
             - proxy
 
