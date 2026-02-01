@@ -2,9 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
-use URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         if (env('APP_FORCE_HTTPS', false)) {
+            $this->app['request']->server->set('HTTPS', 'on');
             URL::forceScheme('https');
         }
     }
