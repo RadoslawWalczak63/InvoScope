@@ -201,7 +201,7 @@ const expenseDonutOptions = ref({
                     Financial Overview
                 </h2>
 
-                <div class="flex flex-row items-center gap-3">
+                <div class="hidden flex-row items-center gap-3 md:flex">
                     <div class="w-full sm:w-40">
                         <Select
                             v-model="selectedCurrency"
@@ -227,14 +227,35 @@ const expenseDonutOptions = ref({
         </template>
 
         <div class="space-y-6 py-6">
+            <div class="flex justify-end gap-3 md:hidden">
+                <div class="w-full sm:w-40">
+                    <Select
+                        v-model="selectedCurrency"
+                        :options="props.filters.currencies"
+                        placeholder="Currency"
+                        class="w-full"
+                    />
+                </div>
+                <div class="w-full sm:w-64">
+                    <DatePicker
+                        v-model="dates"
+                        selectionMode="range"
+                        dateFormat="yy-mm-dd"
+                        placeholder="Select Range"
+                        showIcon
+                        class="w-full"
+                        size="small"
+                        :manualInput="false"
+                    />
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <Card
                     class="relative overflow-hidden border-l-4 border-emerald-500 shadow-sm"
                 >
                     <template #content>
-                        <div
-                            class="relative z-10 flex items-start justify-between"
-                        >
+                        <div class="relative flex items-start justify-between">
                             <div>
                                 <p
                                     class="text-sm font-medium uppercase tracking-wider text-gray-500"
