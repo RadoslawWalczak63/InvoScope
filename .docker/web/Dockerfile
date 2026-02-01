@@ -37,6 +37,10 @@ RUN sed -ri -e 's!/var/www/html!/var/www/public!g' /etc/apache2/sites-available/
 
 COPY .docker/web/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
+# supervisor
+RUN apt install -y supervisor
+ADD ./.docker/web/supervisor/conf.d/laravel-scheduler.conf /etc/supervisor/conf.d/
+
 WORKDIR /var/www
 
 ARG USERNAME=root
