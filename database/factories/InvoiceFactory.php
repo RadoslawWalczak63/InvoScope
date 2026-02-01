@@ -14,7 +14,7 @@ class InvoiceFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'number' => 'FV/'.now()->format('Y').'/'.$this->faker->unique()->numberBetween(1000, 9999),
+            'number' => 'FV/'.now()->format('Y').'/'.$this->faker->unique()->numberBetween(1000, 999999),
             'type' => $this->faker->randomElement(InvoiceType::cases()),
             'currency' => Currency::PLN,
             'status' => InvoiceStatus::SENT,
