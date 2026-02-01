@@ -4,7 +4,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
 import { PageProps } from '@/types';
-import { Avatar, Button, Drawer, Menu } from 'primevue';
+import { Avatar, Button, Drawer, Menu, Popover } from 'primevue';
 import { MenuItem } from 'primevue/menuitem';
 import Swal from 'sweetalert2';
 
@@ -62,6 +62,11 @@ const userNavItems: MenuItem[] = [
         url: route('logout'),
     },
 ];
+
+const notificationsMenu = ref();
+const toggleNotifications = (event: Event) => {
+    notificationsMenu.value.toggle(event);
+};
 
 const userMenu = ref();
 const toggleUserMenu = (event: Event) => {
@@ -248,6 +253,7 @@ watch(
                         rounded
                         severity="secondary"
                         aria-label="Notifications"
+                        @click="toggleNotifications"
                     />
 
                     <div class="relative md:hidden">
@@ -278,5 +284,21 @@ watch(
                 </Link>
             </template>
         </Menu>
+
+        <Popover ref="notificationsMenu" id="notifications-menu">
+            <div class="flex w-80 flex-col">
+                <div
+                    class="flex min-h-[100px] flex-col items-center justify-center text-center"
+                >
+                    <i
+                        class="pi pi-bell-slash text-surface-400 dark:text-surface-500 mb-2 text-2xl"
+                    >
+                    </i>
+                    <p class="text-surface-500 dark:text-surface-400 text-sm">
+                        No new notifications.
+                    </p>
+                </div>
+            </div>
+        </Popover>
     </div>
 </template>

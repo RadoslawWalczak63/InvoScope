@@ -12,7 +12,11 @@ declare module 'vue' {
     Button: typeof import('primevue/button')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
     DatePicker: typeof import('primevue/datepicker')['default']
+    Popover: typeof import('primevue/popover')['default']
     Select: typeof import('primevue/select')['default']
     Tag: typeof import('primevue/tag')['default']
+  }
+  export interface GlobalDirectives {
+    Tooltip: typeof import('primevue/tooltip')['default']
   }
 }

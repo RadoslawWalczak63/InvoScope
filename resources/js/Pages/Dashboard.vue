@@ -201,7 +201,7 @@ const expenseDonutOptions = ref({
                     Financial Overview
                 </h2>
 
-                <div class="flex flex-col items-center gap-3 sm:flex-row">
+                <div class="flex flex-row items-center gap-3">
                     <div class="w-full sm:w-40">
                         <Select
                             v-model="selectedCurrency"
