@@ -19,6 +19,7 @@ interface CreateInvoiceErrors {
     status?: string;
     buyer_id?: string;
     seller_id?: string;
+    currency?: string;
 }
 
 interface CreateInvoiceForm {
