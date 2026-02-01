@@ -84,7 +84,15 @@ const close = () => {
                             Original Source
                         </span>
 
-                        <Tag value="PDF" severity="secondary" class="text-xs" />
+                        <Tag
+                            :value="
+                                invoice.file_url?.endsWith('.pdf')
+                                    ? 'PDF'
+                                    : 'IMG'
+                            "
+                            severity="secondary"
+                            class="text-xs"
+                        />
                     </div>
 
                     <div

@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -58,7 +59,9 @@ class InvoiceController extends Controller
         $models = $copilotService
             ->getModels()
             ->filter(function ($model) {
-                return in_array('image', $model->supported_input_modalities);
+                return in_array('image', $model->supported_input_modalities) &&
+                    Str::startsWith($model->id, 'openai/') &&
+                    ! Str::contains($model->name, 'preview');
             })
             ->map(function ($model) {
                 return [
