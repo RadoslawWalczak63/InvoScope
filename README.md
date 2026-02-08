@@ -2,6 +2,11 @@
 
 A Dockerized Laravel environment with MySQL, Vite, and Traefik.
 
+## Access
+
+* **Localhost:** [http://invoscope.localhost](http://invoscope.localhost)
+* **Production:** [https://invoscope.tech](http://invoscope.tech)
+
 ## Prerequisites
 
 * Docker & Docker Compose.
@@ -44,7 +49,3 @@ npm install && npm run build
 php artisan key:generate
 php artisan migrate
 ```
-
-## Access
-
-* **Web:** [http://invoscope.localhost](http://invoscope.localhost)
