@@ -114,6 +114,7 @@ class InvoiceController extends Controller
             'items.*.price' => 'required|numeric|min:0',
             'items.*.tax_amount' => 'required|numeric|min:0',
             'items.*.discount' => 'required|numeric|min:0',
+            'bank_account_number' => 'nullable|string|max:255',
         ]);
 
         $status = $request->input('status');
@@ -131,6 +132,7 @@ class InvoiceController extends Controller
             'status' => $status,
             'buyer_id' => $request->input('buyer_id'),
             'seller_id' => $request->input('seller_id'),
+            'bank_account_number' => $request->input('bank_account_number'),
         ]);
 
         $inputItems = collect($request->input('items'));

@@ -38,7 +38,8 @@ jobs:
 
             echo "🔄 Restarting Queues & Supervisor..."
             docker compose exec -T web php artisan queue:restart
-            docker compose exec -T web service supervisor restart
+            docker compose exec -T web service supervisor stop
+            docker compose exec -T web service supervisor start
 
             echo "🧹 Clearing and Rebuilding Caches..."
             docker compose exec -T web php artisan optimize:clear
